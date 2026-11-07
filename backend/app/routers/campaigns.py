@@ -56,13 +56,19 @@ async def get_campaign(campaign_id: UUID):
     # 4. Preluăm raportul (dacă există)
     report_res = supabase.table("reports").select("*").eq("campaign_id", str(campaign_id)).execute()
     report = report_res.data[0] if report_res.data else None
-    
+
+    # The limits the run was started with, so the approval screen shows the real guardrails.
+    run_res = supabase.table("agent_runs").select("limits").eq("id", run_id).execute()
+    run_row = run_res.data[0] if run_res.data else {}
+    limits = run_row.get("limits") if isinstance(run_row, dict) else None
+
     return {
         "campaign": {
             "id": campaign["id"],
             "status": campaign["status"],
             "max_exposure_cents": campaign["max_exposure_cents"],
-            "run_id": run_id
+            "run_id": run_id,
+            "limits": limits if isinstance(limits, dict) else None,
         },
         "cohorts": list(cohorts_map.values()),
         "report": report

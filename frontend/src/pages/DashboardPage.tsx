@@ -84,7 +84,7 @@ export default function DashboardPage() {
         <div className="footer__inner">
           <p className="footer__note">
             {source === "live"
-              ? "Everything on this page comes from the campaign, except the guardrail limits, which use the documented defaults."
+              ? "Everything on this page comes from the campaign and the limits its run was started with."
               : source === "partly"
                 ? "Parts of this page are live; the rest is demo data until the agent is connected."
                 : "All figures on this page are demo data until a campaign is connected."}{" "}

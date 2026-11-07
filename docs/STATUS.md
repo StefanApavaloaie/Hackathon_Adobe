@@ -1,6 +1,6 @@
 # Status against SYSTEM_DESIGN.md
 
-Checked on `main` at `9c06dc3`, 2026-11-07, after both branches and `frontend/Stefan` were merged, then updated on `final_touch/Stefan` (New run button, Groq fixes, page restyle, login, cost vs value). The backend tests pass (191), and the frontend builds.
+Checked on `main` at `9c06dc3`, 2026-11-07, after both branches and `frontend/Stefan` were merged, then updated on `final_touch/Stefan` (New run button, Groq fixes, page restyle, login, cost vs value). The backend tests pass (196), and the frontend builds.
 
 Key: **[x]** done and working locally, **[~]** partly done, **[ ]** not started.
 
@@ -12,7 +12,7 @@ Key: **[x]** done and working locally, **[~]** partly done, **[ ]** not started.
 | [x] | F2 | LLM cohorts with revenue at stake | `agent/diagnose.py`, falls back to Stripe's feedback value |
 | [x] | F3 | Catalog offer plus two variants per cohort, with reasoning | `agent/strategy.py` |
 | [x] | F4 | Discount, send-cap and exposure limits in code | `agent/guardrails.py`, `delivery/send.py` |
-| [~] | F5 | One approval screen | Dashboard shows cohorts, offers, reasoning and exposure, and Approve/Reject work. **Guardrail limits are hard-coded defaults** (`DEFAULT_LIMITS` in `useDashboardData.ts`) because the campaign API doesn't return the run's limits. No preview of the personalised pages |
+| [x] | F5 | One approval screen | Dashboard shows cohorts, offers, reasoning, exposure and the run's own limits (`GET /api/campaigns/{id}` returns `campaign.limits`), and Approve/Reject work. Still no preview of the personalised pages (R10) |
 | [x] | F6 | Real email only to allow-listed recipients | `delivery/send.py`, `email_client.py`. Not yet confirmed from the deployed backend |
 | [x] | F7 | Click tracking via `/r/{token}` | `routers/tracking.py` |
 | [x] | F8 | Personalised page per cohort and variant | `agent/pages.py` generates it, `WinbackPage.tsx` renders it in the reference design, with an unsubscribe footer |
@@ -33,7 +33,7 @@ Key: **[x]** done and working locally, **[~]** partly done, **[ ]** not started.
 | [~] | `LLM_MODE` on Render | `render.yaml` sets `LLM_MODE=saved`. `4463dd2` commits 24 cache files from the first live runs, so saved mode replays those, but any prompt not in the cache (a new run with different data) falls back to default copy. Set `LLM_MODE=live` for the demo |
 | [ ] | Deployment | `render.yaml` and `vercel.json` exist. No sign it has been deployed and tested from the public URLs |
 | [ ] | Keep-awake ping | No pinger set up for `/health` |
-| [ ] | `/` route for unknown paths | `/<campaign-id>` renders a blank page. Low priority, but a redirect or 404 page would stop confusion |
+| [x] | `/` route for unknown paths | A catch-all route sends `/<campaign-id>` to `/?campaign=<id>`, and any other unknown path to `/` |
 | [ ] | Resend webhook | `/webhooks/resend` returns 501. This was first on the design's cut list, so leave it |
 | [ ] | Hour-7 checkpoint | The full loop (run → approve → email → click → page → pay → conversion) hasn't been run on deployed URLs |
 
@@ -45,10 +45,7 @@ In order. Each step should be finished before the next, except where marked as p
 
 - Built and checked logged out. Set `ALLOW_DEV_AUTH=false` in `backend/.env`, restart the backend, sign in, and confirm the dashboard loads and New run, Approve and Generate recommendation work.
 
-### 2. Real guardrail limits (in parallel with step 1)
-
-- Starting a run from the dashboard is done (`4463dd2`).
-- Still left: return the run's `limits` from `GET /api/campaigns/{id}` and drop `DEFAULT_LIMITS`.
+### 2. Real guardrail limits: done
 
 ### 3. Deploy and do the hour-7 checkpoint
 
@@ -63,14 +60,14 @@ In order. Each step should be finished before the next, except where marked as p
 
 ### 4b. Agent leftovers
 
-- The `GET /` route in the frozen `main.py`, `backend/tests/_quick_test.py`, and confirming the Groq daily limits in `routers/usage.py` against the account's Free Plan page.
+- `_quick_test.py` is deleted. Left: decide whether to keep the `GET /` route in the frozen `main.py` (harmless), and confirm the Groq daily limits in `routers/usage.py` against the account's Free Plan page.
 
 ### 5. Demo readiness
 
 - Set up the keep-awake ping on `/health` every 10 minutes.
 - Check Groq's remaining daily tokens, and keep the 60K reserve.
 - Approval screen: link to a preview of each cohort's page (R10).
-- Add a catch-all route that redirects to `/`.
+- One run at a time: `POST /api/runs` returns 409 while another run is working (done).
 - Feature freeze, then record the backup video and rehearse the demo script twice.
 
 ### Stretch, only if steps 1–5 are done

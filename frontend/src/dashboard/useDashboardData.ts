@@ -45,7 +45,14 @@ interface ApiCohort {
   variants: ApiVariant[];
 }
 interface CampaignResponse {
-  campaign: { id: string; status: string; max_exposure_cents: number | null; run_id: string };
+  campaign: {
+    id: string;
+    status: string;
+    max_exposure_cents: number | null;
+    run_id: string;
+    /** The run's limits (backend/app/routers/runs.py RunLimits). Null for old campaigns. */
+    limits?: { max_percent_off?: number; send_cap?: number; max_exposure_cents?: number } | null;
+  };
   cohorts: ApiCohort[];
   report: { recommendation?: string } | null;
 }
@@ -75,7 +82,7 @@ const STATUS_LABEL: Record<string, string> = {
 // Steps: Import, Diagnose, Propose, Approve, Act, Measure, Recommend.
 const STEP_FOR_STATUS: Record<string, number> = { draft: 3, rejected: 3, approved: 4, sending: 4, sent: 5 };
 
-// The run's limits aren't returned by the API yet, so these are the documented defaults
+// Used only when a campaign's run has no stored limits: the documented defaults
 // (docs/guides/feature-agent.md, step 2).
 const DEFAULT_LIMITS = { maxDiscountPercent: 40, sendCap: 250, exposureLimit: 5000 };
 
@@ -112,6 +119,7 @@ function toCohort(cohort: ApiCohort): Cohort {
 }
 
 function fromCampaign(view: CampaignResponse) {
+  const limits = view.campaign.limits ?? null;
   const cohorts = view.cohorts.map(toCohort);
   return {
     status: view.campaign.status,
@@ -119,10 +127,11 @@ function fromCampaign(view: CampaignResponse) {
     recipients: view.cohorts.reduce((sum, c) => sum + c.customer_count, 0),
     cohorts,
     guardrails: {
-      maxDiscountPercent: DEFAULT_LIMITS.maxDiscountPercent,
-      sendCap: DEFAULT_LIMITS.sendCap,
+      maxDiscountPercent: limits?.max_percent_off ?? DEFAULT_LIMITS.maxDiscountPercent,
+      sendCap: limits?.send_cap ?? DEFAULT_LIMITS.sendCap,
       exposure: Math.round((view.campaign.max_exposure_cents ?? 0) / 100),
-      exposureLimit: DEFAULT_LIMITS.exposureLimit,
+      exposureLimit:
+        limits?.max_exposure_cents != null ? Math.round(limits.max_exposure_cents / 100) : DEFAULT_LIMITS.exposureLimit,
     },
     recommendation: view.report?.recommendation ?? null,
   };
