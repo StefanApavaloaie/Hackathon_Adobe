@@ -11,8 +11,6 @@ CAMPAIGN_ID = str(uuid.uuid4())
 
 DELIVERY_STUBS = [
     ("GET", f"/api/campaigns/{CAMPAIGN_ID}/results"),
-    ("GET", "/api/pages/some-token"),
-    ("POST", "/api/pages/some-token/checkout"),
     ("POST", "/webhooks/stripe"),
     ("POST", "/webhooks/resend"),
 ]
@@ -33,4 +31,5 @@ def test_metrics_placeholder_returns_zeros_for_both_sources():
 
 def test_public_routes_need_no_login(make_settings):
     app = create_app(make_settings())
-    assert TestClient(app).get("/api/pages/some-token").status_code == 501
+    # An unknown token, not a login error: public pages never ask for login.
+    assert TestClient(app).get("/api/pages/some-token").status_code == 404

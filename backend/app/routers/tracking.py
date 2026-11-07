@@ -1,5 +1,4 @@
 # Owned by feature/delivery. Public routes reached from email links, identified only by token.
-import re
 from datetime import UTC, datetime
 from typing import Protocol
 
@@ -7,13 +6,10 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app.config import Settings, get_settings
+from app.delivery.tokens import looks_like_token
 from app.services.supabase_client import get_supabase
 
 router = APIRouter(tags=["tracking"])
-
-# Tokens are secrets.token_urlsafe(16): 22 URL-safe characters. Allow some slack,
-# and turn away anything else before touching the database.
-TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{16,64}$")
 
 
 class TrackingStore(Protocol):
@@ -53,7 +49,7 @@ def get_tracking_store() -> TrackingStore:
 
 
 def _find(store: TrackingStore, token: str) -> dict | None:
-    if not TOKEN_PATTERN.fullmatch(token):
+    if not looks_like_token(token):
         return None
     return store.get_recipient(token)
 
