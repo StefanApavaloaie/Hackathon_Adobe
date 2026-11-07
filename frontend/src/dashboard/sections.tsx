@@ -13,11 +13,13 @@ const LINKS = [
   { href: "#next", label: "Next step" },
 ];
 
+export type DataSource = "demo" | "partly" | "live";
+
 export function Navs({
   campaignName,
   status,
-  partlyLive = false,
-}: Pick<DashboardData, "campaignName" | "status"> & { partlyLive?: boolean }) {
+  source = "demo",
+}: Pick<DashboardData, "campaignName" | "status"> & { source?: DataSource }) {
   return (
     <div className="navs">
       <header className="globalnav">
@@ -40,7 +42,9 @@ export function Navs({
       <div className="campaignbar">
         <div className="campaignbar__inner">
           <p className="campaignbar__name">{campaignName}</p>
-          <span className="tag tag--demo">{partlyLive ? "Partly demo" : "Demo data"}</span>
+          <span className={`tag ${source === "live" ? "tag--live" : "tag--demo"}`}>
+            {source === "live" ? "Live data" : source === "partly" ? "Partly demo" : "Demo data"}
+          </span>
           <span className="tag tag--status">{status}</span>
           <a className="btn btn--primary btn--sm campaignbar__cta" href="#decision">
             Approve
@@ -262,7 +266,15 @@ export function Results({ results, live = false }: { results: DashboardData["res
   );
 }
 
-export function NextStep({ recommendation }: { recommendation: string }) {
+interface NextStepProps {
+  recommendation: string | null;
+  /** True when a real campaign is loaded, so the agent can be asked for a recommendation. */
+  connected?: boolean;
+  busy?: boolean;
+  onGenerate?: () => void;
+}
+
+export function NextStep({ recommendation, connected = false, busy = false, onGenerate }: NextStepProps) {
   return (
     <section className="section next" id="next" aria-labelledby="next-title">
       <div className="next__inner" data-reveal>
@@ -270,7 +282,16 @@ export function NextStep({ recommendation }: { recommendation: string }) {
         <h2 id="next-title" className="next__title">
           What to do next.
         </h2>
-        <p className="next__text">{recommendation}</p>
+        {recommendation ? (
+          <p className="next__text">{recommendation}</p>
+        ) : (
+          <p className="next__empty">No recommendation yet. Ask the agent once results start coming in.</p>
+        )}
+        {connected && (
+          <button type="button" className="btn next__action" aria-disabled={busy} onClick={busy ? undefined : onGenerate}>
+            {busy ? "Working…" : recommendation ? "Refresh recommendation" : "Generate recommendation"}
+          </button>
+        )}
         <p className="next__note">The agent suggests this. It never runs on its own.</p>
       </div>
     </section>

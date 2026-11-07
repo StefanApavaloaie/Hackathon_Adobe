@@ -7,7 +7,8 @@ export interface Cohort {
   offer: string;
   atStakeMonthly: number;
   reasoning: string;
-  variants: [string, string];
+  /** Message variants in label order (A, B, ...). */
+  variants: string[];
 }
 
 export interface ResultSide {
@@ -35,7 +36,8 @@ export interface DashboardData {
   };
   cohorts: Cohort[];
   results: { live: ResultSide; simulated: ResultSide };
-  recommendation: string;
+  /** null when the campaign has no recommendation yet. */
+  recommendation: string | null;
 }
 
 export const DEMO: DashboardData = {

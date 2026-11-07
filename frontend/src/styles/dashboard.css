@@ -613,6 +613,16 @@
   text-wrap: balance;
 }
 
+.next__empty {
+  margin-top: var(--s-5);
+  font-size: var(--t-lead);
+  color: var(--ink-2);
+}
+
+.next__action {
+  margin-top: var(--s-6);
+}
+
 .next__note {
   margin-top: var(--s-5);
   color: var(--ink-2);

@@ -1,17 +1,18 @@
-// Owned by frontend/Stefan. Feeds the dashboard from the API where endpoints exist,
-// and keeps DEMO data everywhere else (see docs/BRANCH_PLAN.md).
+// Owned by frontend/Stefan. Feeds the dashboard from the API, and keeps labelled DEMO data
+// for anything an endpoint can't provide (see docs/BRANCH_PLAN.md).
 //
-// Connected now (feature/delivery):
-//   GET  /api/campaigns/{id}/results  -> status + live/simulated results
-//   POST /api/campaigns/{id}/approve  -> approve and start sending
-// Still demo (feature/agent): hero figures, guardrails, cohorts and the recommendation,
-// which will come from GET /api/campaigns/{id} and its report.
+//   GET  /api/campaigns/{id}          -> cohorts, offers, variants, exposure, report  (feature/agent)
+//   GET  /api/campaigns/{id}/results  -> status + live/simulated results             (feature/delivery)
+//   POST /api/campaigns/{id}/approve  -> approve and start sending                   (feature/delivery)
+//   POST /api/campaigns/{id}/reject   -> reject a draft                              (feature/agent)
+//   POST /api/campaigns/{id}/report   -> generate the recommendation                 (feature/agent)
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ApiError, apiGet, apiPost } from "../lib/api";
-import { DEMO, type DashboardData, type ResultSide } from "./demoData";
+import { type Cohort, DEMO, type DashboardData, type ResultSide } from "./demoData";
 
-// Shape of delivery's GET /api/campaigns/{id}/results (backend/app/routers/sending.py, app/metrics.py).
+// --- API shapes --------------------------------------------------------------
+
 interface Counts {
   recipients: number;
   clicks: number;
@@ -26,6 +27,29 @@ interface ResultsResponse {
   metrics: { live: Counts; simulated: Counts };
 }
 
+interface ApiOffer {
+  label: string | null;
+  percent_off: number;
+  duration_months: number;
+}
+interface ApiVariant {
+  label: string;
+  subject: string;
+  offer: ApiOffer | null;
+}
+interface ApiCohort {
+  label: string;
+  summary: string | null;
+  customer_count: number;
+  mrr_at_stake_cents: number;
+  variants: ApiVariant[];
+}
+interface CampaignResponse {
+  campaign: { id: string; status: string; max_exposure_cents: number | null; run_id: string };
+  cohorts: ApiCohort[];
+  report: { recommendation?: string } | null;
+}
+
 export type CampaignStatus = "draft" | "approved" | "sending" | "sent" | "rejected";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -36,7 +60,16 @@ const STATUS_LABEL: Record<string, string> = {
   rejected: "Rejected",
 };
 
+// Steps: Import, Diagnose, Propose, Approve, Act, Measure, Recommend.
+const STEP_FOR_STATUS: Record<string, number> = { draft: 3, rejected: 3, approved: 4, sending: 4, sent: 5 };
+
+// The run's limits aren't returned by the API yet, so these are the documented defaults
+// (docs/guides/feature-agent.md, step 2).
+const DEFAULT_LIMITS = { maxDiscountPercent: 40, sendCap: 250, exposureLimit: 5000 };
+
 const POLL_MS = 3000;
+
+// --- mapping -----------------------------------------------------------------
 
 function toSide(counts: Counts): ResultSide {
   return {
@@ -49,20 +82,63 @@ function toSide(counts: Counts): ResultSide {
   };
 }
 
+function offerText(variants: ApiVariant[]): string {
+  const labels = [...new Set(variants.map((v) => v.offer?.label).filter((l): l is string => Boolean(l)))];
+  if (labels.length === 0) return "No offer chosen";
+  return labels.length === 1 ? labels[0] : `Testing ${labels.join(" vs ")}`;
+}
+
+function toCohort(cohort: ApiCohort): Cohort {
+  const variants = [...cohort.variants].sort((a, b) => a.label.localeCompare(b.label));
+  return {
+    name: cohort.label,
+    offer: offerText(variants),
+    atStakeMonthly: Math.round(cohort.mrr_at_stake_cents / 100),
+    reasoning: cohort.summary ?? "",
+    variants: variants.map((v) => v.subject),
+  };
+}
+
+function fromCampaign(view: CampaignResponse) {
+  const cohorts = view.cohorts.map(toCohort);
+  return {
+    status: view.campaign.status,
+    atStakeMonthly: cohorts.reduce((sum, c) => sum + c.atStakeMonthly, 0),
+    recipients: view.cohorts.reduce((sum, c) => sum + c.customer_count, 0),
+    cohorts,
+    guardrails: {
+      maxDiscountPercent: DEFAULT_LIMITS.maxDiscountPercent,
+      sendCap: DEFAULT_LIMITS.sendCap,
+      exposure: Math.round((view.campaign.max_exposure_cents ?? 0) / 100),
+      exposureLimit: DEFAULT_LIMITS.exposureLimit,
+    },
+    recommendation: view.report?.recommendation ?? null,
+  };
+}
+
+// --- hook ----------------------------------------------------------------------
+
 export interface DashboardState {
   data: DashboardData;
-  /** True when the results come from the API rather than demo data. */
+  /** True when the campaign view (cohorts, offers, figures) comes from the API. */
+  campaignLive: boolean;
+  /** True when the results come from the API. */
   resultsLive: boolean;
   campaignStatus: CampaignStatus | null;
-  /** A problem loading the campaign, in words a person can act on. */
   loadError: string | null;
   busy: boolean;
   actionMessage: string | null;
   approve: () => Promise<void>;
   reject: () => Promise<void>;
+  generateReport: () => Promise<void>;
+}
+
+function errorText(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
 }
 
 export function useDashboardData(campaignId: string | null): DashboardState {
+  const [view, setView] = useState<CampaignResponse | null>(null);
   const [results, setResults] = useState<ResultsResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -71,21 +147,27 @@ export function useDashboardData(campaignId: string | null): DashboardState {
 
   const load = useCallback(async () => {
     if (!campaignId) return;
-    try {
-      const response = await apiGet<ResultsResponse>(`/api/campaigns/${encodeURIComponent(campaignId)}/results`);
-      if (!active.current) return;
-      setResults(response);
-      setLoadError(null);
-    } catch (error) {
-      if (!active.current) return;
-      if (error instanceof ApiError && error.status === 404) setLoadError("That campaign wasn't found. Showing demo data.");
-      else if (error instanceof ApiError && error.status === 501) setLoadError(null);
-      else setLoadError(error instanceof Error ? error.message : "Couldn't load the campaign.");
-    }
+    const id = encodeURIComponent(campaignId);
+    const [viewResult, resultsResult] = await Promise.allSettled([
+      apiGet<CampaignResponse>(`/api/campaigns/${id}`),
+      apiGet<ResultsResponse>(`/api/campaigns/${id}/results`),
+    ]);
+    if (!active.current) return;
+
+    if (viewResult.status === "fulfilled") setView(viewResult.value);
+    if (resultsResult.status === "fulfilled") setResults(resultsResult.value);
+
+    const failure = [viewResult, resultsResult].find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
+    if (!failure) setLoadError(null);
+    else if (failure.reason instanceof ApiError && failure.reason.status === 404)
+      setLoadError("That campaign wasn't found. Showing demo data.");
+    else if (failure.reason instanceof ApiError && failure.reason.status === 501) setLoadError(null);
+    else setLoadError(errorText(failure.reason, "Couldn't load the campaign."));
   }, [campaignId]);
 
   useEffect(() => {
     active.current = true;
+    setView(null);
     setResults(null);
     setLoadError(null);
     setActionMessage(null);
@@ -98,54 +180,75 @@ export function useDashboardData(campaignId: string | null): DashboardState {
     };
   }, [campaignId, load]);
 
-  const approve = useCallback(async () => {
-    if (!campaignId || busy) return;
-    setBusy(true);
-    setActionMessage(null);
-    try {
-      await apiPost(`/api/campaigns/${encodeURIComponent(campaignId)}/approve`);
-      setActionMessage("Approved. Emails are going out to the allow-listed inboxes.");
-      await load();
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 409) setActionMessage("This campaign was rejected, so it can't be approved.");
-      else setActionMessage(error instanceof Error ? error.message : "Approval failed. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }, [busy, campaignId, load]);
-
-  const reject = useCallback(async () => {
-    if (!campaignId || busy) return;
-    setBusy(true);
-    setActionMessage(null);
-    try {
-      await apiPost(`/api/campaigns/${encodeURIComponent(campaignId)}/reject`);
-      setActionMessage("Proposal rejected.");
-      await load();
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 501) setActionMessage("Rejecting isn't available yet: it arrives with the agent's update.");
-      else setActionMessage(error instanceof Error ? error.message : "Couldn't reject the proposal.");
-    } finally {
-      setBusy(false);
-    }
-  }, [busy, campaignId, load]);
-
-  const data: DashboardData = results
-    ? {
-        ...DEMO,
-        status: STATUS_LABEL[results.status] ?? results.status,
-        results: { live: toSide(results.metrics.live), simulated: toSide(results.metrics.simulated) },
+  const act = useCallback(
+    async (path: string, success: string, describe: (error: unknown) => string) => {
+      if (!campaignId || busy) return;
+      setBusy(true);
+      setActionMessage(null);
+      try {
+        await apiPost(`/api/campaigns/${encodeURIComponent(campaignId)}/${path}`);
+        setActionMessage(success);
+        await load();
+      } catch (error) {
+        setActionMessage(describe(error));
+      } finally {
+        setBusy(false);
       }
-    : DEMO;
+    },
+    [busy, campaignId, load],
+  );
+
+  const approve = useCallback(
+    () =>
+      act("approve", "Approved. Emails are going out to the allow-listed inboxes.", (e) =>
+        e instanceof ApiError && e.status === 409 ? "This campaign was rejected, so it can't be approved." : errorText(e, "Approval failed. Please try again."),
+      ),
+    [act],
+  );
+
+  const reject = useCallback(
+    () =>
+      act("reject", "Proposal rejected. Nothing was sent.", (e) =>
+        e instanceof ApiError && e.status === 409 ? "Only a draft can be rejected." : errorText(e, "Couldn't reject the proposal."),
+      ),
+    [act],
+  );
+
+  const generateReport = useCallback(
+    () => act("report", "Recommendation generated.", (e) => errorText(e, "Couldn't generate the recommendation.")),
+    [act],
+  );
+
+  const fromView = view ? fromCampaign(view) : null;
+  const status = results?.status ?? fromView?.status ?? null;
+
+  const data: DashboardData = {
+    ...DEMO,
+    ...(fromView
+      ? {
+          campaignName: "Win-back campaign",
+          atStakeMonthly: fromView.atStakeMonthly,
+          recipients: fromView.recipients,
+          cohorts: fromView.cohorts,
+          guardrails: fromView.guardrails,
+          recommendation: fromView.recommendation,
+        }
+      : {}),
+    ...(status ? { status: STATUS_LABEL[status] ?? status, currentStep: STEP_FOR_STATUS[status] ?? DEMO.currentStep } : {}),
+    ...(results ? { results: { live: toSide(results.metrics.live), simulated: toSide(results.metrics.simulated) } } : {}),
+  };
+  if (fromView?.recommendation) data.currentStep = 6;
 
   return {
     data,
+    campaignLive: view !== null,
     resultsLive: results !== null,
-    campaignStatus: results ? (results.status as CampaignStatus) : null,
+    campaignStatus: (status as CampaignStatus | null) ?? null,
     loadError,
     busy,
     actionMessage,
     approve,
     reject,
+    generateReport,
   };
 }
