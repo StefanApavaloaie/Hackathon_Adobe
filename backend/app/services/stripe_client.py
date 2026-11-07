@@ -8,4 +8,5 @@ def get_stripe() -> StripeClient:
     settings = get_settings()
     if not settings.stripe_secret_key:
         raise ServiceNotConfigured("Stripe is not configured")
-    return StripeClient(settings.stripe_secret_key)
+    # Retries cover the occasional 429 when the seed script makes many calls in a row.
+    return StripeClient(settings.stripe_secret_key, max_network_retries=3)

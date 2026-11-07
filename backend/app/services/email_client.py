@@ -11,3 +11,13 @@ def get_resend():
         raise ServiceNotConfigured("Resend is not configured")
     resend.api_key = settings.resend_api_key
     return resend
+
+
+def parse_allowlist(raw: str) -> list[str]:
+    """RECIPIENT_ALLOWLIST as lower-case addresses, in order, without blanks or repeats."""
+    emails: list[str] = []
+    for part in raw.split(","):
+        email = part.strip().lower()
+        if email and email not in emails:
+            emails.append(email)
+    return emails
