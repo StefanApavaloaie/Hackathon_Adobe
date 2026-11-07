@@ -8,6 +8,14 @@ from app.agent.strategy import run_strategy
 
 logger = logging.getLogger(__name__)
 
+def _delete_proposal(supabase, run_id: UUID) -> None:
+    """Delete this run's campaign and its variants, so the step is safe to repeat."""
+    campaigns = supabase.table("campaigns").select("id").eq("run_id", str(run_id)).execute().data
+    for camp in campaigns:
+        supabase.table("variants").delete().eq("campaign_id", camp["id"]).execute()
+    supabase.table("campaigns").delete().eq("run_id", str(run_id)).execute()
+
+
 async def run_pipeline(run_id: UUID):
     supabase = get_supabase()
     
@@ -32,7 +40,12 @@ async def run_pipeline(run_id: UUID):
 
         if step == "diagnose":
             # 2. DIAGNOSE
-            supabase.table("cohort_members").delete().eq("run_id", str(run_id)).execute()
+            # cohort_members has no run_id: delete by this run's cohort ids.
+            # Variants reference cohorts, so clear any earlier proposal first.
+            _delete_proposal(supabase, run_id)
+            cohort_ids = [c["id"] for c in supabase.table("cohorts").select("id").eq("run_id", str(run_id)).execute().data]
+            if cohort_ids:
+                supabase.table("cohort_members").delete().in_("cohort_id", cohort_ids).execute()
             supabase.table("cohorts").delete().eq("run_id", str(run_id)).execute()
             
             await run_diagnose(run_id) # AICI E APELUL
@@ -44,10 +57,7 @@ async def run_pipeline(run_id: UUID):
         if step == "strategy":
             # 3. STRATEGY & 4. PROPOSE (Sunt combinate în run_strategy)
             # Idempotency cleanup în caz de resume (ștergem variantele și campania veche)
-            campaigns = supabase.table("campaigns").select("id").eq("run_id", str(run_id)).execute().data
-            for camp in campaigns:
-                supabase.table("variants").delete().eq("campaign_id", camp["id"]).execute()
-            supabase.table("campaigns").delete().eq("run_id", str(run_id)).execute()
+            _delete_proposal(supabase, run_id)
             
             await run_strategy(run_id)
             
@@ -56,12 +66,7 @@ async def run_pipeline(run_id: UUID):
             update_state(status="awaiting_approval", step=step)
             
         if step == "propose":
-            update_state(status="awaiting_approval")
-            
-        if step == "propose":
-            # 4. PROPOSE
-            # TODO: Creare campanie in status 'draft', adaugare variante
-            logger.info(f"Run {run_id}: Propose completed (Placeholder).")
+            # Propose is written by run_strategy; reaching here only marks the run ready.
             update_state(status="awaiting_approval")
 
     except Exception as e:

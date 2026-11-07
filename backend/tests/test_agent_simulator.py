@@ -1,53 +1,132 @@
 import random
-import pytest
-from app.simulator import plan_outcomes
+import uuid
+from datetime import datetime, timedelta, timezone
 
-def test_simulator_same_seed_gives_same_outcomes():
-    """Același seed generează exact aceفسeși rezultate."""
-    recipients = [
-        {"customer_id": "c-1", "campaign_id": "camp-1", "cancel_feedback": "too_expensive", "mrr_cents": 1000, "offer_id": "off-large"}
-    ]
-    offers = {"off-large": {"percent_off": 40, "duration_months": 1}}
-    
-    rng1 = random.Random("test-seed-123")
-    events1, conv1 = plan_outcomes(recipients, offers, rng1)
-    
-    rng2 = random.Random("test-seed-123")
-    events2, conv2 = plan_outcomes(recipients, offers, rng2)
-    
-    assert events1 == events2
-    assert conv1 == conv2
+from app import simulator
+from app.simulator import HIDDEN_RATES, plan_outcomes, simulate_responses
 
-def test_simulator_zero_percent_offer_click_rate_behavior():
-    """O ofertă cu 0% discount folosește banda 0% (verificăm că funcționează fără erori)."""
-    recipients = [
-        {"customer_id": "c-2", "campaign_id": "camp-1", "cancel_feedback": "missing_features", "mrr_cents": 2000, "offer_id": "off-zero"}
-    ]
-    offers = {"off-zero": {"percent_off": 0, "duration_months": 1}}
-    
-    rng = random.Random("fixed-seed")
-    events, conv = plan_outcomes(recipients, offers, rng)
-    # Funcția rulează corect și întoarce listele corespunzătoare ratei ascunse
-    assert isinstance(events, list)
-    assert isinstance(conv, list)
+NOW = datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)
+OFFERS = {"off-50": {"percent_off": 50, "duration_months": 1}, "off-0": {"percent_off": 0, "duration_months": 1}}
 
-def test_simulator_timestamps_within_60_seconds():
-    """Fiecare timestamp generat se încadrează într-o fereastră de 60 de secunde."""
-    from datetime import datetime
-    recipients = [
-        {"customer_id": f"c-{i}", "campaign_id": "camp-1", "cancel_feedback": "too_expensive", "mrr_cents": 1000, "offer_id": "off-1"}
-        for i in range(20) # Testăm cu mai mulți clienți pentru a prinde evenimente generate
+
+def _recipients(n, source="simulated", feedback="too_expensive", offer_id="off-50"):
+    return [
+        {"recipient_id": f"r-{source}-{i}", "source": source, "cancel_feedback": feedback, "mrr_cents": 1000, "offer_id": offer_id}
+        for i in range(n)
     ]
-    offers = {"off-1": {"percent_off": 50, "duration_months": 1}}
-    
-    rng = random.Random("time-seed")
-    events, conversions = plan_outcomes(recipients, offers, rng)
-    
-    # Verificăm că cel puțin s-a generat ceva
-    if events:
-        base_dt = datetime.fromisoformat(events[0]["occurred_at"])
-        for ev in events:
-            ev_dt = datetime.fromisoformat(ev["occurred_at"])
-            diff = abs((ev_dt - base_dt).total_seconds())
-            # Toate evenimentele generate sunt în interiorul offset-ului de max 60s + delta mic de page_view
-            assert diff <= 70
+
+
+def test_same_seed_gives_same_outcomes():
+    recs = _recipients(30)
+    a = plan_outcomes(recs, OFFERS, random.Random("seed"), now=NOW)
+    b = plan_outcomes(recs, OFFERS, random.Random("seed"), now=NOW)
+    assert a == b
+    assert a[0], "expected some events with a 60% click rate over 30 recipients"
+
+
+def test_zero_click_rate_gives_no_events():
+    zero = {k: {band: (0.0, 1.0) for band in v} for k, v in HIDDEN_RATES.items()}
+    events, conversions = plan_outcomes(_recipients(50), OFFERS, random.Random("x"), now=NOW, rates=zero)
+    assert events == [] and conversions == []
+
+
+def test_every_timestamp_within_60_seconds():
+    events, conversions = plan_outcomes(_recipients(200), OFFERS, random.Random("t"), now=NOW)
+    assert events and conversions
+    for row in events + conversions:
+        offset = datetime.fromisoformat(row["occurred_at"]) - NOW
+        assert timedelta(0) <= offset <= timedelta(seconds=60)
+
+
+def test_only_simulated_recipients_are_used():
+    always = {k: {band: (1.0, 1.0) for band in v} for k, v in HIDDEN_RATES.items()}
+    recs = _recipients(5, source="live") + _recipients(5)
+    events, conversions = plan_outcomes(recs, OFFERS, random.Random("s"), now=NOW, rates=always)
+    ids = {e["recipient_id"] for e in events} | {c["recipient_id"] for c in conversions}
+    assert ids == {f"r-simulated-{i}" for i in range(5)}
+    assert all(e["source"] == "simulated" for e in events)
+
+
+def test_conversion_mrr_is_discounted_price():
+    always = {k: {band: (1.0, 1.0) for band in v} for k, v in HIDDEN_RATES.items()}
+    _, conversions = plan_outcomes(_recipients(1), OFFERS, random.Random("m"), now=NOW, rates=always)
+    assert conversions[0]["mrr_cents"] == 500
+
+
+# ---------------------------------------------------------------------------
+# Database wrapper, against a tiny in-memory fake of the Supabase client
+# ---------------------------------------------------------------------------
+class _Result:
+    def __init__(self, data):
+        self.data = data
+
+
+class _Query:
+    def __init__(self, db, table):
+        self.db, self.table, self.filters, self.rows = db, table, [], None
+
+    def select(self, _cols="*"):
+        return self
+
+    def eq(self, col, val):
+        self.filters.append(lambda r: r.get(col) == val)
+        return self
+
+    def in_(self, col, vals):
+        vals = set(vals)
+        self.filters.append(lambda r: r.get(col) in vals)
+        return self
+
+    def insert(self, rows):
+        self.rows = rows if isinstance(rows, list) else [rows]
+        return self
+
+    def execute(self):
+        store = self.db.tables.setdefault(self.table, [])
+        if self.rows is not None:
+            store.extend(self.rows)
+            return _Result(self.rows)
+        return _Result([r for r in store if all(f(r) for f in self.filters)])
+
+
+class FakeDB:
+    def __init__(self, tables):
+        self.tables = tables
+
+    def table(self, name):
+        return _Query(self, name)
+
+
+def _seeded_db(campaign_id):
+    customers = [{"id": f"cust-{i}", "cancel_feedback": "too_expensive", "mrr_cents": 2000} for i in range(40)]
+    recipients = [
+        {"id": f"rec-{i}", "campaign_id": campaign_id, "customer_id": f"cust-{i}", "variant_id": "var-a",
+         "source": "simulated" if i < 30 else "live"}
+        for i in range(40)
+    ]
+    return FakeDB({
+        "customers": customers,
+        "recipients": recipients,
+        "variants": [{"id": "var-a", "offer_id": "off-50"}],
+        "offers": [{"id": "off-50", "percent_off": 50, "duration_months": 3}],
+        "events": [],
+        "conversions": [],
+    })
+
+
+def test_simulate_responses_writes_schema_rows_and_is_idempotent(monkeypatch):
+    campaign_id = uuid.uuid4()
+    db = _seeded_db(str(campaign_id))
+    monkeypatch.setattr(simulator, "get_supabase", lambda: db)
+
+    simulate_responses(campaign_id)
+    events, conversions = list(db.tables["events"]), list(db.tables["conversions"])
+    assert events and conversions
+    live_ids = {f"rec-{i}" for i in range(30, 40)}
+    assert not ({e["recipient_id"] for e in events} & live_ids)
+    assert set(events[0]) == {"recipient_id", "type", "source", "occurred_at"}
+    assert set(conversions[0]) == {"recipient_id", "mrr_cents", "source", "occurred_at"}
+
+    simulate_responses(campaign_id)
+    assert db.tables["events"] == events
+    assert db.tables["conversions"] == conversions

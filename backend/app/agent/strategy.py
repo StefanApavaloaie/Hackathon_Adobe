@@ -139,7 +139,6 @@ async def run_strategy(run_id: UUID) -> None:
     camp_res = supabase.table("campaigns").insert(campaign_data).execute()
     campaign_id = camp_res.data[0]["id"]
     
-    supabase.table("agent_runs").update({"campaign_id": campaign_id}).eq("id", str(run_id)).execute()
 
     variants_to_insert = []
     for cohort_id, var_list in final_variants.items():

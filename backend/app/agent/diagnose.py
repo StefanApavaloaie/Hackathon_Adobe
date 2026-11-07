@@ -51,10 +51,6 @@ async def run_diagnose(run_id: uuid.UUID) -> None:
     
     discovered_cohorts: dict[str, dict[str, Any]] = {}
 
-    # Extragem comentariile unice
-    unique_comments = list({c["cancel_comment"] for c in customers if c.get("cancel_comment")})
-    
-    discovered_cohorts: dict[str, dict[str, Any]] = {}
     comment_to_cohort_key: dict[str, str] = {}
     comment_to_confidence: dict[str, float] = {}
 
@@ -102,6 +98,9 @@ async def run_diagnose(run_id: uuid.UUID) -> None:
     final_cohorts_data = {} # db_id -> { date cohorta + metrici }
     members_to_insert = []
 
+    # Only keys the LLM discovered count as valid, not fallback cohorts added below.
+    llm_keys = set(discovered_cohorts)
+
     def get_or_create_fallback_cohort(feedback: str) -> str:
         fallback_key = feedback or "unknown_reason"
         if fallback_key not in discovered_cohorts:
@@ -126,7 +125,7 @@ async def run_diagnose(run_id: uuid.UUID) -> None:
             assigned_by = "fallback"
         else:
             assigned_key = comment_to_cohort_key.get(comment)
-            if not assigned_key or assigned_key not in discovered_cohorts:
+            if not assigned_key or assigned_key not in llm_keys:
                 cohort_db_id = get_or_create_fallback_cohort(feedback)
                 assigned_by = "fallback"
             else:

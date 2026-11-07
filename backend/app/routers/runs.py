@@ -47,12 +47,16 @@ async def get_run_status(run_id: UUID):
     # Extragem cohorte dacă există
     cohorts_result = supabase.table("cohorts").select("label, customer_count, mrr_at_stake_cents").eq("run_id", str(run_id)).execute()
     
+    # campaigns.run_id is unique; agent_runs has no campaign_id column
+    campaign_rows = supabase.table("campaigns").select("id").eq("run_id", str(run_id)).execute().data
+    campaign_id = campaign_rows[0]["id"] if campaign_rows else None
+
     # Întoarcem payload-ul specificat în cerințe
     return {
         "status": run_data["status"],
         "current_step": run_data["current_step"],
         "error": run_data.get("error"),
-        "campaign_id": run_data.get("campaign_id"),
+        "campaign_id": campaign_id,
         "cohorts": cohorts_result.data
     }
 

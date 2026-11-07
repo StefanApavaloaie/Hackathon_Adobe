@@ -1,8 +1,11 @@
 from uuid import UUID
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.auth import require_user
 from app.services.supabase_client import get_supabase
 
-router = APIRouter(prefix="/api/campaigns", tags=["campaigns"])
+# Owned by feature/agent. Approve and results live in sending.py (feature/delivery).
+router = APIRouter(prefix="/api/campaigns", tags=["campaigns"], dependencies=[Depends(require_user)])
 
 @router.get("/{campaign_id}")
 async def get_campaign(campaign_id: UUID):

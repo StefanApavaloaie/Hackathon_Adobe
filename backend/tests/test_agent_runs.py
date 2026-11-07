@@ -96,18 +96,23 @@ async def test_run_pipeline_state_machine(monkeypatch):
     state = {"status": "running", "current_step": "import", "error": None}
     
     class FakeTable:
+        def __init__(self, name):
+            self.name = name
         def update(self, data):
-            state.update(data)
+            if self.name == "agent_runs":
+                state.update(data)
             return self
         def eq(self, *args): return self
-        def execute(self): 
-            return MagicMock(data=[state])
+        def in_(self, *args): return self
+        def execute(self):
+            # Only agent_runs has a row; every other table starts empty.
+            return MagicMock(data=[state] if self.name == "agent_runs" else [])
         def select(self, *args): return self
         def delete(self, *args): return self
 
     class FakeSupabase:
         def table(self, name):
-            return FakeTable()
+            return FakeTable(name)
 
     monkeypatch.setattr("app.agent.orchestrator.get_supabase", lambda: FakeSupabase())
     
