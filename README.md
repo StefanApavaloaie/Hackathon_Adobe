@@ -36,7 +36,7 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
-Open http://localhost:5173. The page shows whether the frontend can reach the backend, and the status of each service.
+Open http://localhost:5173. The Status panel shows whether the frontend can reach the backend, and the status of each service.
 
 ## Configure services
 
@@ -53,20 +53,22 @@ Add keys to `backend/.env` and `frontend/.env`. Each `.env.example` explains its
 
 ## Where code goes
 
-Routes in section 7 of the design already exist and return `501`. Replace each stub as you build it.
+Work is split into two branches that never edit the same file. **Read [`docs/BRANCH_PLAN.md`](docs/BRANCH_PLAN.md) before writing code.** It lists every file's owner, the frozen files, and the placeholder functions that connect the branches.
 
-| Owner | Work | Location |
+| Branch | Does | Main files |
 |---|---|---|
-| Front end and pitch | Login, dashboard, approval, results | `frontend/src/pages/`, `frontend/src/lib/` |
-| Backend 1 | Agent steps, guardrails, simulator, report | New `backend/app/agent/`; `routers/runs.py`, `routers/campaigns.py`, `routers/usage.py`; `services/llm_client.py` |
-| Backend 2 | Stripe, email, tracking, auth, deployment | `routers/tracking.py`, `routers/webhooks.py`, `routers/pages.py`; `services/stripe_client.py`, `services/email_client.py` |
-| Innovation | Page generation and template | `frontend/src/pages/WinbackPage.tsx`; new `backend/app/agent/pages.py` |
+| `feature/agent` | Decides and explains: runs, cohorts, strategy, guardrails, page content, simulator, recommendation | `backend/app/agent/`, `routers/runs.py`, `routers/campaigns.py`, `routers/usage.py`, `app/simulator.py`, `services/llm_client.py` |
+| `feature/delivery` | Acts and measures: login, Stripe, sending, tracking, pages, checkout, webhooks, results | `app/auth.py`, `routers/sending.py`, `routers/pages.py`, `routers/tracking.py`, `routers/webhooks.py`, `app/metrics.py`, `app/stripe_import.py` |
+
+Routes in section 7 of the design already exist and return `501`. Replace each stub as you build it, and delete its line from your branch's `tests/test_stubs_*.py`.
+
+Load the offer catalog after the schema by running `supabase/seed/offers.sql`.
 
 ## Rules to keep
 
 These come from the design, and the skeleton can't enforce all of them yet:
 
-- Protected routes need login checks before anything real is deployed.
+- Login is a placeholder until `feature/delivery` replaces it. Set `ALLOW_DEV_AUTH=true` only in local `.env` files, never on Render.
 - The LLM never decides prices, recipients or metrics. Code owns those.
 - Check `RECIPIENT_ALLOWLIST` immediately before every send.
 - Completions must honour `LLM_MODE`.

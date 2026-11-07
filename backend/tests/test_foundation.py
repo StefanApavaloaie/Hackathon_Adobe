@@ -1,45 +1,11 @@
-import uuid
-
+# Shared by both branches. Frozen after step 0: change it only through a pull request to main.
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
-from app.config import Settings, get_settings
+from app.config import Settings
 from app.main import create_app
-
-FRONTEND = "http://localhost:5173"
-RUN_ID = str(uuid.uuid4())
-CAMPAIGN_ID = str(uuid.uuid4())
-
-STUBBED_ROUTES = [
-    ("POST", "/api/runs"),
-    ("GET", f"/api/runs/{RUN_ID}"),
-    ("POST", f"/api/runs/{RUN_ID}/resume"),
-    ("GET", f"/api/campaigns/{CAMPAIGN_ID}"),
-    ("POST", f"/api/campaigns/{CAMPAIGN_ID}/approve"),
-    ("POST", f"/api/campaigns/{CAMPAIGN_ID}/reject"),
-    ("GET", f"/api/campaigns/{CAMPAIGN_ID}/results"),
-    ("POST", f"/api/campaigns/{CAMPAIGN_ID}/report"),
-    ("GET", "/api/usage"),
-    ("GET", "/r/some-token"),
-    ("GET", "/api/pages/some-token"),
-    ("POST", "/api/pages/some-token/checkout"),
-    ("GET", "/u/some-token"),
-    ("POST", "/webhooks/stripe"),
-    ("POST", "/webhooks/resend"),
-]
-
-
-def make_settings(**overrides) -> Settings:
-    return Settings(_env_file=None, frontend_origin=FRONTEND, **overrides)
-
-
-@pytest.fixture
-def client() -> TestClient:
-    settings = make_settings()
-    app = create_app(settings)
-    app.dependency_overrides[get_settings] = lambda: settings
-    return TestClient(app)
+from conftest import FRONTEND
 
 
 def test_health_is_ok(client):
@@ -66,28 +32,33 @@ def test_dependencies_report_not_configured_without_keys(client):
     }
 
 
-@pytest.mark.parametrize("method,path", STUBBED_ROUTES)
-def test_section_7_routes_are_stubbed(client, method, path):
-    assert client.request(method, path).status_code == 501
-
-
-def test_live_stripe_key_is_rejected():
+def test_live_stripe_key_is_rejected(make_settings):
     with pytest.raises(ValidationError, match="sk_test_"):
         make_settings(stripe_secret_key="sk_live_abc")
 
 
-def test_rejected_stripe_key_is_not_printed_in_the_error():
+def test_rejected_stripe_key_is_not_printed_in_the_error(make_settings):
     with pytest.raises(ValidationError) as error:
         make_settings(stripe_secret_key="sk_live_abc")
     assert "sk_live_abc" not in str(error.value)
 
 
-def test_test_stripe_key_is_accepted():
+def test_test_stripe_key_is_accepted(make_settings):
     assert make_settings(stripe_secret_key="sk_test_abc").stripe_secret_key == "sk_test_abc"
 
 
-def test_llm_mode_defaults_to_saved_so_tokens_are_not_spent_by_accident():
+def test_llm_mode_defaults_to_saved_so_tokens_are_not_spent_by_accident(make_settings):
     assert make_settings().llm_mode == "saved"
+
+
+def test_dev_login_is_off_unless_explicitly_allowed(make_settings):
+    assert make_settings().allow_dev_auth is False
+
+
+def test_public_urls_ignore_trailing_slashes(make_settings):
+    settings = make_settings(frontend_origin=f"{FRONTEND}/", public_api_url="http://127.0.0.1:8000/")
+    assert settings.frontend_origin == FRONTEND
+    assert settings.public_api_url == "http://127.0.0.1:8000"
 
 
 def test_cors_allows_the_frontend_origin(client):
@@ -106,7 +77,7 @@ def test_cors_rejects_other_origins(client):
     assert "access-control-allow-origin" not in response.headers
 
 
-def test_unhandled_errors_return_json_with_cors_headers():
+def test_unhandled_errors_return_json_with_cors_headers(make_settings):
     app = create_app(make_settings())
 
     @app.get("/boom")

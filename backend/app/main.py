@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import Settings, get_settings
 from app.errors import ServiceNotConfigured
-from app.routers import campaigns, health, pages, runs, tracking, usage, webhooks
+from app.routers import campaigns, health, pages, runs, sending, tracking, usage, webhooks
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
-    for module in (health, runs, campaigns, usage, pages, tracking, webhooks):
+    # Every router is registered here, so neither feature branch needs to edit this file.
+    for module in (health, runs, campaigns, usage, sending, pages, tracking, webhooks):
         app.include_router(module.router)
 
     return app

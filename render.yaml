@@ -18,6 +18,10 @@ services:
       # Set these in the Render dashboard. They are never stored in the repo.
       - key: FRONTEND_ORIGIN
         sync: false
+      - key: PUBLIC_API_URL
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY

@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore", hide_input_in_errors=True)
 
     frontend_origin: str = "http://localhost:5173"
+    # Base URL for links in emails, such as /r/{token} and /u/{token}.
+    public_api_url: str = "http://127.0.0.1:8000"
+    # Lets the placeholder login through. Local development only; never set it on Render.
+    allow_dev_auth: bool = False
 
     supabase_url: str = ""
     supabase_service_key: str = ""
@@ -28,9 +32,10 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
 
     resend_api_key: str = ""
+    email_from: str = ""
     recipient_allowlist: str = ""
 
-    @field_validator("frontend_origin")
+    @field_validator("frontend_origin", "public_api_url")
     @classmethod
     def strip_trailing_slash(cls, value: str) -> str:
         return value.rstrip("/")

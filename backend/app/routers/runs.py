@@ -1,10 +1,12 @@
+# Owned by feature/agent.
 from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.auth import require_user
 from app.errors import not_implemented
 
-router = APIRouter(prefix="/api/runs", tags=["runs"])
+router = APIRouter(prefix="/api/runs", tags=["runs"], dependencies=[Depends(require_user)])
 
 
 @router.post("")

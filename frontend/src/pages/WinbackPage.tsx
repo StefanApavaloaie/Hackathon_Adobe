@@ -1,4 +1,5 @@
-// Placeholder for the personalised win-back page. Render PageContent here as plain text.
+// Owned by feature/delivery. Fetch GET /api/pages/{token} and render its PageContent
+// (see backend/app/contracts.py) as plain text, never as HTML.
 export default function WinbackPage() {
   return (
     <main>
