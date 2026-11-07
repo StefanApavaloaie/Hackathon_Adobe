@@ -11,7 +11,6 @@ CAMPAIGN_ID = str(uuid.uuid4())
 
 DELIVERY_STUBS = [
     ("GET", f"/api/campaigns/{CAMPAIGN_ID}/results"),
-    ("POST", "/webhooks/stripe"),
     ("POST", "/webhooks/resend"),
 ]
 
