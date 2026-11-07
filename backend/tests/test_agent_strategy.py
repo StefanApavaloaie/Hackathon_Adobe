@@ -1,7 +1,41 @@
 import pytest
 import uuid
 from app.agent.guardrails import validate_variants, compute_max_exposure, enforce_exposure_limit
-from app.agent.strategy import run_strategy
+from app.agent.strategy import VariantSchema, run_strategy
+from pydantic import ValidationError
+
+# ---------------------------------------------------------------------------
+# The schema sent to Groq: labels are an enum, so strict mode can't invent "Variant A"
+# ---------------------------------------------------------------------------
+
+VALID_VARIANT = {
+    "label": "A",
+    "offer_id": "offer-1",
+    "subject": "Come back",
+    "body_text": "We miss you.",
+    "page_content": {
+        "headline": "Welcome back",
+        "subheadline": "Pick up where you left off.",
+        "reasons": [{"title": "Still here", "body": "Your work is waiting."}],
+        "objection_response": "Cancel any time.",
+        "cta_label": "Come back",
+    },
+    "reasoning": "Test.",
+}
+
+
+def test_variant_label_schema_is_an_enum_of_a_and_b():
+    assert VariantSchema.model_json_schema()["properties"]["label"]["enum"] == ["A", "B"]
+
+
+def test_variant_label_rejects_free_text():
+    with pytest.raises(ValidationError):
+        VariantSchema.model_validate({**VALID_VARIANT, "label": "Variant A"})
+
+
+def test_variant_label_accepts_a_and_b():
+    assert VariantSchema.model_validate(VALID_VARIANT).label == "A"
+    assert VariantSchema.model_validate({**VALID_VARIANT, "label": "B"}).label == "B"
 
 # ---------------------------------------------------------------------------
 # Teste pentru Funcțiile Pure (Guardrails)

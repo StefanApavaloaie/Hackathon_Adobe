@@ -220,6 +220,77 @@ def test_invalid_json_twice_raises(tmp_path: Path, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# Live mode – Groq rejecting its own generation (400 json_validate_failed)
+# ---------------------------------------------------------------------------
+
+SCHEMA_MISMATCH = {
+    "error": {
+        "message": "Generated JSON does not match the expected schema. Please adjust your prompt.",
+        "type": "invalid_request_error",
+        "code": "json_validate_failed",
+    }
+}
+
+
+def test_schema_mismatch_400_once_then_success(tmp_path: Path, monkeypatch):
+    """Groq's 'generated JSON does not match the schema' 400 is retried once."""
+    monkeypatch.setattr("app.services.llm_client.CACHE_DIR", tmp_path)
+    monkeypatch.setattr("app.services.llm_client._log_llm_call", lambda **kw: None)
+
+    _patch_groq(monkeypatch, [
+        httpx.Response(400, json=SCHEMA_MISMATCH),
+        httpx.Response(200, json=_groq_success_body(VALID_RESPONSE)),
+    ])
+
+    result = _run(complete_json(
+        step="test",
+        messages=[{"role": "user", "content": "hi"}],
+        schema=DummySchema,
+        run_id=None,
+        settings=_settings(llm_mode="live"),
+    ))
+    assert result.count == 42
+
+
+def test_schema_mismatch_400_twice_raises(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr("app.services.llm_client.CACHE_DIR", tmp_path)
+    monkeypatch.setattr("app.services.llm_client._log_llm_call", lambda **kw: None)
+
+    _patch_groq(monkeypatch, [
+        httpx.Response(400, json=SCHEMA_MISMATCH),
+        httpx.Response(400, json=SCHEMA_MISMATCH),
+    ])
+
+    with pytest.raises(LLMUnavailable, match="400"):
+        _run(complete_json(
+            step="test",
+            messages=[{"role": "user", "content": "hi"}],
+            schema=DummySchema,
+            run_id=None,
+            settings=_settings(llm_mode="live"),
+        ))
+
+
+def test_other_400_is_not_retried(tmp_path: Path, monkeypatch):
+    """Any other 400 (a bad request) fails at once; the fake transport has no second reply."""
+    monkeypatch.setattr("app.services.llm_client.CACHE_DIR", tmp_path)
+    monkeypatch.setattr("app.services.llm_client._log_llm_call", lambda **kw: None)
+
+    _patch_groq(monkeypatch, [
+        httpx.Response(400, json={"error": {"message": "model not found", "code": "model_not_found"}}),
+    ])
+
+    with pytest.raises(LLMUnavailable, match="model not found"):
+        _run(complete_json(
+            step="test",
+            messages=[{"role": "user", "content": "hi"}],
+            schema=DummySchema,
+            run_id=None,
+            settings=_settings(llm_mode="live"),
+        ))
+
+
+# ---------------------------------------------------------------------------
 # Caching in live mode
 # ---------------------------------------------------------------------------
 

@@ -6,7 +6,8 @@ import "../styles/dashboard.css";
 
 import { useSearchParams } from "react-router-dom";
 
-import { type DataSource, Guardrails, Hero, Navs, NextStep, Reasons, Results } from "../dashboard/sections";
+import { type DataSource, Guardrails, Hero, Navs, NextStep, Reasons, Results, RunBar } from "../dashboard/sections";
+import { RUN_STEPS, useAgentRun } from "../dashboard/useAgentRun";
 import { useDashboardData } from "../dashboard/useDashboardData";
 import { useReveal } from "../dashboard/useReveal";
 import StatusPanel from "../panels/StatusPanel";
@@ -17,13 +18,33 @@ export default function DashboardPage() {
   const [params] = useSearchParams();
   const campaignId = params.get("campaign");
   const state = useDashboardData(campaignId);
+  const run = useAgentRun();
   const { data } = state;
+  const runActive = run.starting || run.runId !== null;
   const connected = state.campaignLive || state.resultsLive;
   const source: DataSource = state.campaignLive && state.resultsLive ? "live" : connected ? "partly" : "demo";
 
   return (
     <div className="dashboard">
-      <Navs campaignName={data.campaignName} status={data.status} source={source} />
+      <Navs campaignName={data.campaignName} status={data.status} source={source} onNewRun={run.start} runActive={runActive}>
+        {runActive && (
+          <RunBar
+            steps={RUN_STEPS}
+            stepIndex={run.stepIndex}
+            status={run.run?.status ?? null}
+            error={run.run?.error ?? run.error}
+            onResume={run.resume}
+            onDismiss={run.dismiss}
+          />
+        )}
+        {!runActive && run.error && (
+          <div className="runbar runbar--failed" role="alert">
+            <div className="runbar__inner">
+              <p className="runbar__title">Couldn't start a run: {run.error}</p>
+            </div>
+          </div>
+        )}
+      </Navs>
       <main>
         <Hero
           data={data}
@@ -36,7 +57,22 @@ export default function DashboardPage() {
         />
         <Guardrails data={data} />
         <Reasons cohorts={data.cohorts} />
-        <Results results={data.results} live={state.resultsLive} />
+        <Results
+          results={data.results}
+          live={state.resultsLive}
+          usage={
+            state.usage
+              ? {
+                  runTokens: state.usage.run_tokens ?? 0,
+                  runCalls: state.usage.run_llm_calls ?? 0,
+                  tokensToday: state.usage.tokens_today,
+                  dailyAllowance: state.usage.daily_allowance,
+                  reserve: state.usage.reserve,
+                  costUsd: state.usage.llm_cost_usd,
+                }
+              : null
+          }
+        />
         <NextStep
           recommendation={data.recommendation}
           connected={state.campaignLive}
@@ -48,7 +84,7 @@ export default function DashboardPage() {
         <div className="footer__inner">
           <p className="footer__note">
             {source === "live"
-              ? "Everything on this page comes from the campaign, except the guardrail limits, which use the documented defaults."
+              ? "Everything on this page comes from the campaign and the limits its run was started with."
               : source === "partly"
                 ? "Parts of this page are live; the rest is demo data until the agent is connected."
                 : "All figures on this page are demo data until a campaign is connected."}{" "}

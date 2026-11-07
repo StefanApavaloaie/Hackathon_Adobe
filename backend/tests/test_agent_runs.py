@@ -13,6 +13,7 @@ def test_create_run(client, monkeypatch):
     # Mock pentru baza de date
     mock_db = MagicMock()
     mock_db.table().insert().execute.return_value.data = [{"id": fake_run_id}]
+    mock_db.table().select().eq().gte().order().limit().execute.return_value.data = []  # no run in progress
     monkeypatch.setattr("app.routers.runs.get_supabase", lambda: mock_db)
     
     # Mock pentru BackgroundTasks ca să nu declanșeze funcția reală în test
@@ -76,11 +77,62 @@ def test_resume_run_success(client, monkeypatch):
     
     mock_db = MagicMock()
     mock_db.table().select().eq().execute.return_value.data = [{"status": "failed"}]
+    mock_db.table().select().eq().gte().order().limit().execute.return_value.data = []  # no run in progress
     monkeypatch.setattr("app.routers.runs.get_supabase", lambda: mock_db)
     monkeypatch.setattr("fastapi.BackgroundTasks.add_task", MagicMock())
 
     response = client.post(f"/api/runs/{fake_run_id}/resume")
     assert response.status_code == 202
+
+
+def _db_with_active_run(step="strategy"):
+    mock_db = MagicMock()
+    mock_db.table().select().eq().gte().order().limit().execute.return_value.data = [
+        {"id": str(uuid.uuid4()), "started_at": "2026-11-07T17:05:40+00:00", "current_step": step}
+    ]
+    return mock_db
+
+
+def test_create_run_409_while_another_run_is_working(client, monkeypatch):
+    """Only one run at a time: they share Groq's per-minute token limit."""
+    mock_db = _db_with_active_run("strategy")
+    monkeypatch.setattr("app.routers.runs.get_supabase", lambda: mock_db)
+    add_task = MagicMock()
+    monkeypatch.setattr("fastapi.BackgroundTasks.add_task", add_task)
+
+    response = client.post("/api/runs", json={})
+
+    assert response.status_code == 409
+    assert "Another run is still working (step: strategy)" in response.json()["detail"]
+    mock_db.table().insert.assert_not_called()
+    add_task.assert_not_called()
+
+
+def test_resume_run_409_while_another_run_is_working(client, monkeypatch):
+    mock_db = _db_with_active_run()
+    mock_db.table().select().eq().execute.return_value.data = [{"status": "failed"}]
+    monkeypatch.setattr("app.routers.runs.get_supabase", lambda: mock_db)
+    add_task = MagicMock()
+    monkeypatch.setattr("fastapi.BackgroundTasks.add_task", add_task)
+
+    response = client.post(f"/api/runs/{uuid.uuid4()}/resume")
+
+    assert response.status_code == 409
+    add_task.assert_not_called()
+
+
+def test_runs_older_than_the_stale_window_do_not_block():
+    """A run left 'running' by a crash stops blocking after RUN_STALE_AFTER."""
+    from datetime import datetime, timezone
+
+    from app.routers.runs import RUN_STALE_AFTER, find_active_run
+
+    mock_db = MagicMock()
+    mock_db.table().select().eq().gte().order().limit().execute.return_value.data = []
+    now = datetime(2026, 11, 7, 17, 30, tzinfo=timezone.utc)
+    assert find_active_run(mock_db, now) is None
+    cutoff = mock_db.table().select().eq().gte.call_args.args
+    assert cutoff == ("started_at", (now - RUN_STALE_AFTER).isoformat())
 
 # ---------------------------------------------------------------------------
 # Teste pentru Orchestrator (Logica stărilor)

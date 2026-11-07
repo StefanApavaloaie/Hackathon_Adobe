@@ -193,14 +193,37 @@ async def complete_json(
             response = await _call_groq(client, model=model, messages=current_messages, schema=schema)
             latency_ms = int((time.monotonic() - t0) * 1000)
 
+            # Groq rejects its own output with a 400 when the model drops a required field.
+            # That is the model's slip, not a bad request, so it gets the same one retry.
+            if (
+                response.status_code == 400
+                and "json_validate_failed" in response.text
+                and validation_attempt == 0
+            ):
+                _log_llm_call(
+                    step=step, model=model,
+                    input_tokens=None, output_tokens=None,
+                    latency_ms=latency_ms, ok=False, run_id=run_id,
+                )
+                logger.warning("Groq rejected its generation for step=%s (schema mismatch), retrying", step)
+                current_messages = list(messages) + [
+                    {
+                        "role": "user",
+                        "content": "Your previous answer was missing required fields. Return every field in the schema.",
+                    },
+                ]
+                continue
+
             if response.status_code != 200:
                 _log_llm_call(
                     step=step, model=model,
                     input_tokens=None, output_tokens=None,
                     latency_ms=latency_ms, ok=False, run_id=run_id,
                 )
+                # Groq's error body says why (rate limit, request too large, schema rejected).
+                # It never contains the API key.
                 raise LLMUnavailable(
-                    f"Groq returned {response.status_code} for step={step}"
+                    f"Groq returned {response.status_code} for step={step}: {response.text[:300]}"
                 )
 
             data = response.json()

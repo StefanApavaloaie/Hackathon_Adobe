@@ -45,10 +45,29 @@ interface ApiCohort {
   variants: ApiVariant[];
 }
 interface CampaignResponse {
-  campaign: { id: string; status: string; max_exposure_cents: number | null; run_id: string };
+  campaign: {
+    id: string;
+    status: string;
+    max_exposure_cents: number | null;
+    run_id: string;
+    /** The run's limits (backend/app/routers/runs.py RunLimits). Null for old campaigns. */
+    limits?: { max_percent_off?: number; send_cap?: number; max_exposure_cents?: number } | null;
+  };
   cohorts: ApiCohort[];
   report: { recommendation?: string } | null;
 }
+
+/** GET /api/usage?run_id=… (backend/app/routers/usage.py). */
+export interface Usage {
+  tokens_today: number;
+  daily_allowance: number;
+  reserve: number;
+  llm_cost_usd: number;
+  run_tokens?: number;
+  run_llm_calls?: number;
+}
+
+const USAGE_POLL_MS = 15000;
 
 export type CampaignStatus = "draft" | "approved" | "sending" | "sent" | "rejected";
 
@@ -63,7 +82,7 @@ const STATUS_LABEL: Record<string, string> = {
 // Steps: Import, Diagnose, Propose, Approve, Act, Measure, Recommend.
 const STEP_FOR_STATUS: Record<string, number> = { draft: 3, rejected: 3, approved: 4, sending: 4, sent: 5 };
 
-// The run's limits aren't returned by the API yet, so these are the documented defaults
+// Used only when a campaign's run has no stored limits: the documented defaults
 // (docs/guides/feature-agent.md, step 2).
 const DEFAULT_LIMITS = { maxDiscountPercent: 40, sendCap: 250, exposureLimit: 5000 };
 
@@ -100,6 +119,7 @@ function toCohort(cohort: ApiCohort): Cohort {
 }
 
 function fromCampaign(view: CampaignResponse) {
+  const limits = view.campaign.limits ?? null;
   const cohorts = view.cohorts.map(toCohort);
   return {
     status: view.campaign.status,
@@ -107,10 +127,11 @@ function fromCampaign(view: CampaignResponse) {
     recipients: view.cohorts.reduce((sum, c) => sum + c.customer_count, 0),
     cohorts,
     guardrails: {
-      maxDiscountPercent: DEFAULT_LIMITS.maxDiscountPercent,
-      sendCap: DEFAULT_LIMITS.sendCap,
+      maxDiscountPercent: limits?.max_percent_off ?? DEFAULT_LIMITS.maxDiscountPercent,
+      sendCap: limits?.send_cap ?? DEFAULT_LIMITS.sendCap,
       exposure: Math.round((view.campaign.max_exposure_cents ?? 0) / 100),
-      exposureLimit: DEFAULT_LIMITS.exposureLimit,
+      exposureLimit:
+        limits?.max_exposure_cents != null ? Math.round(limits.max_exposure_cents / 100) : DEFAULT_LIMITS.exposureLimit,
     },
     recommendation: view.report?.recommendation ?? null,
   };
@@ -124,6 +145,8 @@ export interface DashboardState {
   campaignLive: boolean;
   /** True when the results come from the API. */
   resultsLive: boolean;
+  /** LLM tokens for this campaign's run, or null until loaded. Never demo data. */
+  usage: Usage | null;
   campaignStatus: CampaignStatus | null;
   loadError: string | null;
   busy: boolean;
@@ -143,6 +166,7 @@ export function useDashboardData(campaignId: string | null): DashboardState {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [usage, setUsage] = useState<Usage | null>(null);
   const active = useRef(true);
 
   const load = useCallback(async () => {
@@ -179,6 +203,24 @@ export function useDashboardData(campaignId: string | null): DashboardState {
       window.clearInterval(timer);
     };
   }, [campaignId, load]);
+
+  // Tokens change only while a run is working, so this polls slowly, and only for a real campaign.
+  const runId = view?.campaign.run_id ?? null;
+  useEffect(() => {
+    setUsage(null);
+    if (!runId) return;
+    let live = true;
+    const fetchUsage = () =>
+      apiGet<Usage>(`/api/usage?run_id=${encodeURIComponent(runId)}`)
+        .then((u) => live && setUsage(u))
+        .catch(() => undefined);
+    void fetchUsage();
+    const timer = window.setInterval(fetchUsage, USAGE_POLL_MS);
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+    };
+  }, [runId]);
 
   const act = useCallback(
     async (path: string, success: string, describe: (error: unknown) => string) => {
@@ -243,6 +285,7 @@ export function useDashboardData(campaignId: string | null): DashboardState {
     data,
     campaignLive: view !== null,
     resultsLive: results !== null,
+    usage,
     campaignStatus: (status as CampaignStatus | null) ?? null,
     loadError,
     busy,

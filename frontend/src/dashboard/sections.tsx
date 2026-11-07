@@ -1,6 +1,8 @@
 // Owned by frontend/Stefan. Display components for the dashboard. Each takes its data as props,
 // so the feature branches can pass real API data in place of DEMO.
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
+
+import { signOut, useSession } from "../lib/auth";
 
 import { type Cohort, type DashboardData, type ResultSide, money } from "./demoData";
 import { IconCheck, IconFlask, IconLive, IconReturn, IconShield, IconSpark } from "./icons";
@@ -15,11 +17,29 @@ const LINKS = [
 
 export type DataSource = "demo" | "partly" | "live";
 
-export function Navs({
-  campaignName,
-  status,
-  source = "demo",
-}: Pick<DashboardData, "campaignName" | "status"> & { source?: DataSource }) {
+interface NavsProps extends Pick<DashboardData, "campaignName" | "status"> {
+  source?: DataSource;
+  /** Starts a new agent run. Hidden when not provided. */
+  onNewRun?: () => void;
+  /** True while a run is starting or in progress. */
+  runActive?: boolean;
+  children?: ReactNode;
+}
+
+function SignOut() {
+  const session = useSession();
+  if (session.status !== "signed-in") return null;
+  return (
+    <div className="globalnav__account">
+      {session.email && <span className="globalnav__email">{session.email}</span>}
+      <button type="button" className="globalnav__signout" onClick={() => void signOut()}>
+        Sign out
+      </button>
+    </div>
+  );
+}
+
+export function Navs({ campaignName, status, source = "demo", onNewRun, runActive = false, children }: NavsProps) {
   return (
     <div className="navs">
       <header className="globalnav">
@@ -37,6 +57,7 @@ export function Navs({
               ))}
             </ul>
           </nav>
+          <SignOut />
         </div>
       </header>
       <div className="campaignbar">
@@ -46,10 +67,68 @@ export function Navs({
             {source === "live" ? "Live data" : source === "partly" ? "Partly demo" : "Demo data"}
           </span>
           <span className="tag tag--status">{status}</span>
-          <a className="btn btn--primary btn--sm campaignbar__cta" href="#decision">
-            Approve
-          </a>
+          <div className="campaignbar__actions">
+            {onNewRun && (
+              <button
+                type="button"
+                className="btn btn--sm"
+                aria-disabled={runActive}
+                onClick={runActive ? undefined : onNewRun}
+              >
+                {runActive ? "Run in progress" : "New run"}
+              </button>
+            )}
+            <a className="btn btn--primary btn--sm campaignbar__cta" href="#decision">
+              Approve
+            </a>
+          </div>
         </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+interface RunBarProps {
+  steps: { id: string; label: string; detail: string }[];
+  stepIndex: number;
+  status: string | null;
+  error: string | null;
+  onResume: () => void;
+  onDismiss: () => void;
+}
+
+/** Progress of the agent run in flight, shown under the campaign bar. */
+export function RunBar({ steps, stepIndex, status, error, onResume, onDismiss }: RunBarProps) {
+  const failed = status === "failed";
+  return (
+    <div className={`runbar${failed ? " runbar--failed" : ""}`} role="status" aria-live="polite">
+      <div className="runbar__inner">
+        <p className="runbar__title">
+          {failed ? "The run stopped." : status === null ? "Starting the agent…" : `${steps[stepIndex].detail}…`}
+        </p>
+        <ol className="runbar__steps" aria-label="Run progress">
+          {steps.map((step, i) => {
+            const state = i < stepIndex ? "done" : i === stepIndex && status !== null ? (failed ? "failed" : "current") : "todo";
+            return (
+              <li key={step.id} className={`runbar__step runbar__step--${state}`}>
+                {state === "done" && <IconCheck />}
+                {step.label}
+              </li>
+            );
+          })}
+        </ol>
+        {failed && (
+          <div className="runbar__actions">
+            {error && <p className="runbar__error">{error}</p>}
+            <button type="button" className="btn btn--sm" onClick={onResume}>
+              Resume run
+            </button>
+            <button type="button" className="btn--link" onClick={onDismiss}>
+              Dismiss
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -246,7 +325,59 @@ function ResultCard({ kind, side }: { kind: "live" | "simulated"; side: ResultSi
   );
 }
 
-export function Results({ results, live = false }: { results: DashboardData["results"]; live?: boolean }) {
+export interface CostValueUsage {
+  runTokens: number;
+  runCalls: number;
+  tokensToday: number;
+  dailyAllowance: number;
+  reserve: number;
+  costUsd: number;
+}
+
+/** What the agent cost next to what it recovered. Shown only with real usage, never demo figures. */
+function CostValue({ usage, recoveredMonthly }: { usage: CostValueUsage; recoveredMonthly: number }) {
+  const count = (n: number) => n.toLocaleString("en-US");
+  return (
+    <div className="costvalue" data-reveal>
+      <h3 className="costvalue__title">Cost vs value</h3>
+      <dl className="costvalue__stats">
+        <div>
+          <dt>Live revenue recovered</dt>
+          <dd className="num">
+            {money(recoveredMonthly)}
+            <span>/mo</span>
+          </dd>
+        </div>
+        <div>
+          <dt>LLM tokens for this run</dt>
+          <dd className="num">{count(usage.runTokens)}</dd>
+        </div>
+        <div>
+          <dt>LLM cost</dt>
+          <dd className="num">${usage.costUsd}</dd>
+        </div>
+      </dl>
+      <p className="costvalue__note">
+        {usage.runCalls > 0
+          ? `${usage.runCalls} model calls for this run. `
+          : "This run replayed saved model responses, so it used no tokens. "}
+        {count(usage.tokensToday)} of {count(usage.dailyAllowance)} tokens
+        used today, with {count(usage.reserve)} kept back for the demo. $0 is Groq's free tier: real customer volumes
+        would need a paid plan.
+      </p>
+    </div>
+  );
+}
+
+export function Results({
+  results,
+  live = false,
+  usage = null,
+}: {
+  results: DashboardData["results"];
+  live?: boolean;
+  usage?: CostValueUsage | null;
+}) {
   return (
     <section className="section section--tinted" id="results" aria-labelledby="results-title">
       <div data-reveal>
@@ -262,6 +393,7 @@ export function Results({ results, live = false }: { results: DashboardData["res
         <ResultCard kind="live" side={results.live} />
         <ResultCard kind="simulated" side={results.simulated} />
       </div>
+      {usage && <CostValue usage={usage} recoveredMonthly={live ? results.live.recoveredMonthly : 0} />}
     </section>
   );
 }

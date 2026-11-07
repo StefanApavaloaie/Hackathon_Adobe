@@ -1,10 +1,12 @@
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
-from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+from app.auth import require_user
 from app.services.supabase_client import get_supabase
 from app.agent.orchestrator import run_pipeline
 
-router = APIRouter(prefix="/api/runs", tags=["runs"])
+router = APIRouter(prefix="/api/runs", tags=["runs"], dependencies=[Depends(require_user)])
 
 class RunLimits(BaseModel):
     max_percent_off: int = Field(default=40, le=50)
@@ -17,10 +19,43 @@ class RunCreateRequest(BaseModel):
 class RunCreateResponse(BaseModel):
     run_id: UUID
 
+# Groq's free tier allows about 8K tokens a minute, shared by every run. Two runs at once
+# each take twice as long, and the slower one can run out of retries and fall back to
+# template copy. So only one run works at a time. A run still "running" after this long
+# is assumed to have crashed (for example, the backend restarted), so it no longer blocks.
+RUN_STALE_AFTER = timedelta(minutes=15)
+
+
+def find_active_run(supabase, now: datetime | None = None) -> dict | None:
+    """The run that is still working, if any, ignoring runs that look crashed."""
+    cutoff = (now or datetime.now(timezone.utc)) - RUN_STALE_AFTER
+    rows = (
+        supabase.table("agent_runs")
+        .select("id,started_at,current_step")
+        .eq("status", "running")
+        .gte("started_at", cutoff.isoformat())
+        .order("started_at", desc=True)
+        .limit(1)
+        .execute()
+        .data
+    )
+    return rows[0] if rows else None
+
+
+def ensure_no_active_run(supabase) -> None:
+    active = find_active_run(supabase)
+    if active:
+        step = active.get("current_step") or "starting"
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Another run is still working (step: {step}). Wait for it to finish, then start a new one.",
+        )
+
 @router.post("", status_code=status.HTTP_202_ACCEPTED, response_model=RunCreateResponse)
 async def create_run(background_tasks: BackgroundTasks, request: RunCreateRequest = RunCreateRequest()):
     supabase = get_supabase()
-    
+    ensure_no_active_run(supabase)
+
     # Inserăm noul run în baza de date
     data = {
         "status": "running",
@@ -70,6 +105,7 @@ async def resume_run(run_id: UUID, background_tasks: BackgroundTasks):
         
     if run_result.data[0]["status"] != "failed":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Only failed runs can be resumed")
+    ensure_no_active_run(supabase)
     
     # Resetăm statusul la running și repornim
     supabase.table("agent_runs").update({"status": "running", "error": None}).eq("id", str(run_id)).execute()

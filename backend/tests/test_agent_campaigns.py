@@ -43,3 +43,59 @@ def test_reject_campaign_404_unknown(client, monkeypatch):
     
     assert response.status_code == 404
     assert "Campaign not found" in response.json()["detail"]
+
+class _FakeQuery:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def select(self, *_a, **_k):
+        return self
+
+    def eq(self, *_a, **_k):
+        return self
+
+    def execute(self):
+        return type("Result", (), {"data": self._rows})()
+
+
+class _FakeDB:
+    """Returns fixed rows per table, enough for GET /api/campaigns/{id}."""
+
+    def __init__(self, tables):
+        self._tables = tables
+
+    def table(self, name):
+        return _FakeQuery(self._tables.get(name, []))
+
+
+CAMPAIGN_ID = "dddddddd-0000-4000-8000-000000000001"
+RUN_ID = "aaaaaaaa-0000-4000-8000-000000000001"
+
+
+def _campaign_tables(run_rows):
+    return {
+        "campaigns": [{"id": CAMPAIGN_ID, "status": "draft", "max_exposure_cents": 301400, "run_id": RUN_ID}],
+        "cohorts": [],
+        "variants": [],
+        "reports": [],
+        "agent_runs": run_rows,
+    }
+
+
+def test_get_campaign_returns_the_runs_limits(client, monkeypatch):
+    limits = {"max_percent_off": 30, "send_cap": 120, "max_exposure_cents": 250000}
+    monkeypatch.setattr("app.routers.campaigns.get_supabase", lambda: _FakeDB(_campaign_tables([{"limits": limits}])))
+
+    response = client.get(f"/api/campaigns/{CAMPAIGN_ID}")
+
+    assert response.status_code == 200
+    assert response.json()["campaign"]["limits"] == limits
+
+
+def test_get_campaign_limits_are_null_when_the_run_has_none(client, monkeypatch):
+    monkeypatch.setattr("app.routers.campaigns.get_supabase", lambda: _FakeDB(_campaign_tables([])))
+
+    response = client.get(f"/api/campaigns/{CAMPAIGN_ID}")
+
+    assert response.status_code == 200
+    assert response.json()["campaign"]["limits"] is None

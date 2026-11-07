@@ -1,0 +1,406 @@
+/*
+  Standalone pages: the personalised win-back page, the thank-you page and the login page.
+  Owned by frontend/Stefan.
+  Follows frontend/ref_pictures/ (the 14.56.08 images): a wine top bar, a light hero with an amber
+  action, a crimson band of numbered tiles, a light reassurance section, then a quiet footer.
+*/
+
+.wb {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--ground);
+}
+
+/* Top bar */
+
+.wb-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--wine-nav);
+  color: var(--on-wine);
+}
+
+.wb-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--nav-h);
+  padding: 0 var(--gut);
+}
+
+.wb-nav__brand {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.wb-main {
+  flex: 1;
+}
+
+/* Hero */
+
+.wb-hero {
+  max-width: calc(var(--content) + 2 * var(--gut));
+  margin: 0 auto;
+  padding: var(--s-10) var(--gut) var(--s-9);
+  text-align: center;
+}
+
+.wb-eyebrow {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amber-600);
+}
+
+.wb-hero h1 {
+  max-width: 16ch;
+  margin: var(--s-5) auto 0;
+  overflow-wrap: anywhere;
+}
+
+.wb-lead {
+  max-width: 36ch;
+  margin: var(--s-6) auto 0;
+  font-size: var(--t-lead);
+  color: var(--ink-2);
+}
+
+.wb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-5);
+  margin-top: var(--s-7);
+}
+
+.wb-actions > .btn--primary {
+  min-height: 60px;
+  padding: 0 34px;
+  font-size: 19px;
+}
+
+.wb-note {
+  margin-top: var(--s-5);
+  font-size: var(--t-small);
+  color: var(--ink-2);
+}
+
+.wb-offer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-6);
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--tint);
+  color: var(--wine-ink);
+  font-size: var(--t-small);
+  font-weight: 700;
+}
+
+.wb-offer::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber-500);
+}
+
+/* Crimson band of reasons */
+
+.wb-band {
+  padding: var(--s-10) var(--gut);
+  background: var(--crimson);
+  color: var(--on-wine);
+  text-align: center;
+  scroll-margin-top: var(--nav-h);
+}
+
+.wb-band__inner {
+  max-width: var(--content);
+  margin: 0 auto;
+}
+
+.wb-band h2 {
+  color: var(--on-wine);
+}
+
+.wb-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s-4);
+  margin: var(--s-8) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wb-tile {
+  padding: var(--s-7) var(--s-6);
+  border: 1px solid var(--on-wine-line);
+  border-radius: var(--r-md);
+  background: var(--on-wine-tile);
+}
+
+.wb-tile__num {
+  display: block;
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--amber-400);
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-tile h3 {
+  margin-top: var(--s-5);
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--on-wine);
+}
+
+.wb-tile p {
+  margin-top: var(--s-3);
+  font-size: var(--t-small);
+  color: var(--on-wine-2);
+}
+
+/* Reassurance */
+
+.wb-assure {
+  max-width: calc(var(--content) + 2 * var(--gut));
+  margin: 0 auto;
+  padding: var(--s-10) var(--gut);
+  text-align: center;
+}
+
+.wb-assure__quote {
+  max-width: 28ch;
+  margin: 0 auto;
+  font-size: var(--t-h3);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.wb-checks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-3) var(--s-6);
+  margin: var(--s-6) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-small);
+  color: var(--ink-2);
+}
+
+.wb-checks li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.wb-checks svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--wine-ink);
+}
+
+.wb-assure .wb-actions {
+  margin-top: var(--s-7);
+}
+
+/* The second action is wine, so the page has one amber main action */
+
+.btn--wine {
+  min-height: 56px;
+  padding: 0 32px;
+  border: 0;
+  background: var(--wine-800);
+  color: var(--on-wine);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* Outranks the plain button:hover rule, which would turn these dark */
+  .wb .btn--primary:hover:not(:disabled) {
+    background: var(--amber-fill);
+    color: var(--on-amber);
+  }
+
+  .wb .btn--link:hover {
+    background: none;
+    color: var(--wine-800);
+  }
+
+  .wb .btn--wine:hover:not(:disabled) {
+    background: var(--wine-900);
+    color: var(--on-wine);
+  }
+}
+
+.wb [role="alert"] {
+  max-width: 440px;
+  margin: var(--s-5) auto 0;
+  font-size: var(--t-small);
+}
+
+/* States: loading, invalid link, error, and the thank-you page */
+
+.wb-state {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--s-10) var(--gut);
+  text-align: center;
+}
+
+.wb-state h1 {
+  font-size: var(--t-h2);
+}
+
+.wb-state .wb-eyebrow + h1 {
+  margin-top: var(--s-4);
+}
+
+.wb-state .wb-lead {
+  margin-top: var(--s-5);
+}
+
+.wb-tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: var(--s-6);
+  border-radius: 50%;
+  background: var(--amber-fill);
+  color: var(--on-amber);
+  box-shadow: var(--glow);
+}
+
+.wb-tick svg {
+  width: 32px;
+  height: 32px;
+}
+
+.wb-loading {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--line);
+  border-top-color: var(--wine-ink);
+  border-radius: 50%;
+  animation: wb-spin 0.9s linear infinite;
+}
+
+@keyframes wb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Login */
+
+.auth {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: var(--s-9) var(--gut) var(--s-8);
+  text-align: center;
+}
+
+.auth h1 {
+  margin-top: var(--s-4);
+  font-size: var(--t-h2);
+}
+
+.auth .wb-lead {
+  margin-top: var(--s-5);
+}
+
+.auth-card {
+  margin-top: var(--s-7);
+  padding: var(--s-6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  text-align: left;
+}
+
+.auth-card [role="alert"] {
+  max-width: none;
+  margin: 0 0 var(--s-5);
+}
+
+.auth-card .auth-error {
+  margin: var(--s-5) 0 0;
+}
+
+.auth-card button[type="submit"] {
+  width: 100%;
+  min-height: 52px;
+  margin-top: var(--s-6);
+}
+
+.auth-warning {
+  margin: 0;
+  padding: var(--s-3) var(--gut);
+  background: var(--amber-400);
+  color: var(--on-amber);
+  font-size: var(--t-label);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Footer */
+
+.wb-footer {
+  padding: var(--s-6) var(--gut);
+  border-top: 1px solid var(--line);
+  font-size: var(--t-label);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.wb-footer a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.wb-footer a:hover {
+  color: var(--wine-ink);
+}
+
+@media (max-width: 734px) {
+  .wb-hero,
+  .wb-assure,
+  .wb-state {
+    padding-top: var(--s-9);
+    padding-bottom: var(--s-8);
+  }
+
+  .wb-band {
+    padding-top: var(--s-9);
+    padding-bottom: var(--s-9);
+  }
+
+  .wb-actions > .btn--primary,
+  .btn--wine {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-loading {
+    animation-duration: 3s;
+  }
+}
