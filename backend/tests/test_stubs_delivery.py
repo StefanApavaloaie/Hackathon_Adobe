@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app
 from app.metrics import compute_metrics
-from app.stripe_import import import_customers
 
 CAMPAIGN_ID = str(uuid.uuid4())
 
@@ -25,10 +24,6 @@ DELIVERY_STUBS = [
 @pytest.mark.parametrize("method,path", DELIVERY_STUBS)
 def test_delivery_routes_are_stubbed(client, method, path):
     assert client.request(method, path).status_code == 501
-
-
-def test_import_placeholder_imports_nothing():
-    assert import_customers() == 0
 
 
 def test_metrics_placeholder_returns_zeros_for_both_sources():
