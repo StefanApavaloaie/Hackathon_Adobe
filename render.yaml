@@ -15,6 +15,7 @@ services:
         value: openai/gpt-oss-20b
       - key: LLM_MODE
         value: saved
+      # Never add ALLOW_DEV_AUTH here or in the dashboard: it turns the login check off.
       # Set these in the Render dashboard. They are never stored in the repo.
       - key: FRONTEND_ORIGIN
         sync: false
@@ -26,6 +27,7 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_KEY
         sync: false
+      # Not used: login is checked by asking Supabase directly. Leave it blank.
       - key: SUPABASE_JWT_SECRET
         sync: false
       - key: GROQ_API_KEY
