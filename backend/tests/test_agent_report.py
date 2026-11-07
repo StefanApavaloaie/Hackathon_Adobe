@@ -41,7 +41,7 @@ def _metrics():
 def test_template_mentions_both_sources_separately():
     text = template_recommendation(build_report_input(COHORT_LABELS, VARIANT_OFFERS, _metrics()))
     live_part, sim_part = text.split("Simulated results")[0], text.split("Simulated results")[1]
-    assert "Live results: 1 conversions from 3 recipients" in live_part
+    assert "Live results: 1 conversion from 3 recipients" in live_part
     assert "variant B (What's new tour) converted best, 1/1" in live_part
     assert "17 conversions from 200 recipients" in sim_part
     assert "variant A (40% off for 3 months) converted best, 15/100, against B 2/100" in sim_part

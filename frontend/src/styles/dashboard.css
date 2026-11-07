@@ -832,6 +832,166 @@
   text-wrap: balance;
 }
 
+/* The recommendation: Live and Simulated cards like the Results section, one row per cohort */
+
+.rec {
+  margin-top: var(--s-6);
+  text-align: left;
+}
+
+.rec__prose {
+  max-width: 68ch;
+  margin: 0 auto var(--s-5);
+  font-size: var(--t-lead);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.rec__prose .rec__list {
+  text-align: left;
+}
+
+.rec__sources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--s-5);
+}
+
+.rec__card {
+  padding: var(--s-6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+
+.rec__card--simulated {
+  background: repeating-linear-gradient(-45deg, rgb(122 15 28 / 0.05) 0 12px, transparent 12px 24px), var(--ground);
+}
+
+.rec__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.rec__head h3 {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.rec__label {
+  margin-top: 2px;
+  font-size: var(--t-label);
+  color: var(--ink-2);
+}
+
+.rec__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.rec__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.rec__card--live .rec__icon {
+  background: var(--wine-ink);
+  color: var(--on-wine);
+}
+
+.rec__card--simulated .rec__icon {
+  border: 1.5px dashed var(--wine-ink);
+  color: var(--wine-ink);
+}
+
+.rec__summary {
+  margin-top: var(--s-5);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+}
+
+.rec__list {
+  margin: var(--s-5) 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.rec__item {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-4) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.rec__cohort {
+  font-size: var(--t-label);
+  font-weight: 700;
+  color: var(--wine-ink);
+}
+
+.rec__detail {
+  font-size: var(--t-small);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.rec__offer {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.rec__counts {
+  font-size: var(--t-label);
+  color: var(--ink-2);
+  white-space: normal;
+}
+
+.rec__variant {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  flex: none;
+  padding: 0 6px;
+  border-radius: var(--r-pill);
+  background: var(--amber-fill);
+  color: var(--on-amber);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rec__caveat {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--s-2);
+  max-width: 68ch;
+  margin: var(--s-6) auto 0;
+  font-size: var(--t-label);
+  color: var(--ink-2);
+  text-align: left;
+}
+
+.rec__caveat-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 2px;
+  color: var(--wine-ink);
+}
+
 .next__empty {
   margin-top: var(--s-5);
   font-size: var(--t-lead);

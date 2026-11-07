@@ -398,6 +398,132 @@ export function Results({
   );
 }
 
+// --- Recommendation ------------------------------------------------------------
+// The report is plain text (backend/app/agent/report.py): paragraphs separated by blank lines,
+// "- " lines for each cohort, and a closing caveat. It's parsed here only for layout; every
+// value is still rendered as plain text.
+
+type RecBlock =
+  | { kind: "source"; source: "live" | "simulated"; summary: string; items: string[] }
+  | { kind: "text"; text: string; items: string[] }
+  | { kind: "caveat"; text: string };
+
+const BULLET = /^\s*(?:[-*•]|\d+[.)])\s+/;
+const SOURCE_LEAD = /^(live|simulated)\b[^:]*:\s*/i;
+const CAVEAT = /statistically significant|kept separate|should not be added/i;
+
+function parseRecommendation(text: string): RecBlock[] {
+  const blocks: RecBlock[] = [];
+  for (const chunk of text.split(/\n\s*\n/)) {
+    const lines = chunk.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 0) continue;
+    const items = lines.filter((l) => BULLET.test(l)).map((l) => l.replace(BULLET, ""));
+    const lead = lines.filter((l) => !BULLET.test(l)).join(" ");
+    const source = lead.match(SOURCE_LEAD);
+    if (source) {
+      blocks.push({
+        kind: "source",
+        source: source[1].toLowerCase() as "live" | "simulated",
+        summary: lead.slice(source[0].length),
+        items,
+      });
+    } else if (items.length === 0 && CAVEAT.test(lead)) {
+      blocks.push({ kind: "caveat", text: lead });
+    } else {
+      blocks.push({ kind: "text", text: lead, items });
+    }
+  }
+  return blocks;
+}
+
+// "variant B (25% off for 3 months) converted best, 5/23, against A 0/23."
+const BEST = /^variant ([A-Z]) \(([^)]+)\) converted best,?\s*(.*?)\.?$/;
+
+/** One cohort's line: its name, the winning variant and offer, then the raw counts. */
+function RecItem({ item }: { item: string }) {
+  const split = item.indexOf(": ");
+  const name = split > 0 && split < 60 ? item.slice(0, split) : null;
+  const rest = name ? item.slice(split + 2) : item;
+  const best = rest.match(BEST);
+  return (
+    <li className="rec__item">
+      {name && <span className="rec__cohort">{name}</span>}
+      {best ? (
+        <>
+          <span className="rec__offer">
+            <span className="rec__variant" aria-label={`Variant ${best[1]}`}>
+              {best[1]}
+            </span>
+            {best[2]}
+          </span>
+          <span className="rec__counts num">
+            Converted best: {best[3].replace(/, against /, " · against ")}
+          </span>
+        </>
+      ) : (
+        <span className="rec__detail">{rest}</span>
+      )}
+    </li>
+  );
+}
+
+function Recommendation({ text }: { text: string }) {
+  const blocks = parseRecommendation(text);
+  const sources = blocks.filter((b): b is Extract<RecBlock, { kind: "source" }> => b.kind === "source");
+  const others = blocks.filter((b) => b.kind === "text");
+  const caveats = blocks.filter((b): b is Extract<RecBlock, { kind: "caveat" }> => b.kind === "caveat");
+
+  return (
+    <div className="rec">
+      {others.map((block, i) =>
+        block.kind === "text" ? (
+          <div key={i} className="rec__prose">
+            {block.text && <p>{block.text}</p>}
+            {block.items.length > 0 && (
+              <ul className="rec__list">
+                {block.items.map((item, j) => (
+                  <RecItem key={j} item={item} />
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : null,
+      )}
+      {sources.length > 0 && (
+        <div className="rec__sources">
+          {sources.map((block, i) => (
+            <article key={i} className={`rec__card rec__card--${block.source}`}>
+              <header className="rec__head">
+                <span className="rec__icon">{block.source === "live" ? <IconLive /> : <IconFlask />}</span>
+                <div>
+                  <h3>{block.source === "live" ? "Live" : "Simulated"}</h3>
+                  <p className="rec__label">
+                    {block.source === "live" ? "Real Stripe test checkouts" : "Seeded customers, not real people"}
+                  </p>
+                </div>
+              </header>
+              {block.summary && <p className="rec__summary">{block.summary}</p>}
+              {block.items.length > 0 && (
+                <ul className="rec__list">
+                  {block.items.map((item, j) => (
+                    <RecItem key={j} item={item} />
+                  ))}
+                </ul>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+      {caveats.map((block, i) => (
+        <p key={i} className="rec__caveat">
+          <IconShield className="rec__caveat-icon" />
+          <span>{block.text}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
+
 interface NextStepProps {
   recommendation: string | null;
   /** True when a real campaign is loaded, so the agent can be asked for a recommendation. */
@@ -415,7 +541,7 @@ export function NextStep({ recommendation, connected = false, busy = false, onGe
           What to do next.
         </h2>
         {recommendation ? (
-          <p className="next__text">{recommendation}</p>
+          <Recommendation text={recommendation} />
         ) : (
           <p className="next__empty">No recommendation yet. Ask the agent once results start coming in.</p>
         )}

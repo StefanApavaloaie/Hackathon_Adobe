@@ -30,6 +30,10 @@ class CampaignNotFound(Exception):
 # ---------------------------------------------------------------------------
 # Pure functions
 # ---------------------------------------------------------------------------
+def _count(n: int, noun: str) -> str:
+    return f"{n} {noun}" + ("" if n == 1 else "s")
+
+
 def _rate(numerator: int, denominator: int) -> str:
     return f"{numerator}/{denominator}"
 
@@ -83,7 +87,7 @@ def template_recommendation(report_input: dict) -> str:
             continue
 
         lines = [
-            f"{title}: {totals['conversions']} conversions from {totals['recipients']} recipients "
+            f"{title}: {_count(totals['conversions'], 'conversion')} from {_count(totals['recipients'], 'recipient')} "
             f"({totals['clicks']} clicked), recovering ${totals['mrr_recovered_cents'] / 100:,.2f} a month."
         ]
         for cohort in data["cohorts"]:
