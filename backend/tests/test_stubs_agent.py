@@ -9,9 +9,6 @@ RUN_ID = str(uuid.uuid4())
 CAMPAIGN_ID = str(uuid.uuid4())
 
 AGENT_STUBS = [
-    ("POST", "/api/runs"),
-    ("GET", f"/api/runs/{RUN_ID}"),
-    ("POST", f"/api/runs/{RUN_ID}/resume"),
     ("GET", f"/api/campaigns/{CAMPAIGN_ID}"),
     ("POST", f"/api/campaigns/{CAMPAIGN_ID}/reject"),
     ("POST", f"/api/campaigns/{CAMPAIGN_ID}/report"),
