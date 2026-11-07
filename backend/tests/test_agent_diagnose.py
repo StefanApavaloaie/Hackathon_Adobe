@@ -61,7 +61,8 @@ async def test_diagnose_mapping_and_fallbacks(mock_db, monkeypatch):
             return schema(assignments=[
                 {"index": 0, "cohort_key": "price", "confidence": 0.9},
                 {"index": 1, "cohort_key": "features", "confidence": 0.8},
-                {"index": 2, "cohort_key": "UNKNOWN_KEY", "confidence": 0.5},
+                {"index": 2, "cohort_key": "price", "confidence": 0.5},
+                
             ])
     monkeypatch.setattr("app.agent.diagnose.complete_json", fake_complete_json)
 

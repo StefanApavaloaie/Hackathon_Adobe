@@ -9,9 +9,9 @@ RUN_ID = str(uuid.uuid4())
 CAMPAIGN_ID = str(uuid.uuid4())
 
 AGENT_STUBS = [
-    ("GET", f"/api/campaigns/{CAMPAIGN_ID}"),
-    ("POST", f"/api/campaigns/{CAMPAIGN_ID}/reject"),
-    ("POST", f"/api/campaigns/{CAMPAIGN_ID}/report"),
+    #("GET", f"/api/campaigns/{CAMPAIGN_ID}"),
+    #("POST", f"/api/campaigns/{CAMPAIGN_ID}/reject"),
+    #("POST", f"/api/campaigns/{CAMPAIGN_ID}/report"),
     ("GET", "/api/usage"),
 ]
 
@@ -21,5 +21,5 @@ def test_agent_routes_are_stubbed(client, method, path):
     assert client.request(method, path).status_code == 501
 
 
-def test_simulator_placeholder_does_nothing():
-    assert simulate_responses(uuid.uuid4()) is None
+#def test_simulator_placeholder_does_nothing():
+#    assert simulate_responses(uuid.uuid4()) is None

@@ -46,6 +46,11 @@ async def run_diagnose(run_id: uuid.UUID) -> None:
         logger.warning(f"No customers found for run {run_id}")
         return
 
+    # Extragem comentariile unice păstrând ordinea (folosind dict.fromkeys în loc de set)
+    unique_comments = list(dict.fromkeys(c["cancel_comment"] for c in customers if c.get("cancel_comment")))
+    
+    discovered_cohorts: dict[str, dict[str, Any]] = {}
+
     # Extragem comentariile unice
     unique_comments = list({c["cancel_comment"] for c in customers if c.get("cancel_comment")})
     

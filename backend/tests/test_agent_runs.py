@@ -93,10 +93,8 @@ async def test_run_pipeline_state_machine(monkeypatch):
     
     fake_run_id = uuid.uuid4()
     
-    # Simulăm starea inițială
     state = {"status": "running", "current_step": "import", "error": None}
     
-    # Creăm un mock inteligent care ține minte starea
     class FakeTable:
         def update(self, data):
             state.update(data)
@@ -113,9 +111,17 @@ async def test_run_pipeline_state_machine(monkeypatch):
 
     monkeypatch.setattr("app.agent.orchestrator.get_supabase", lambda: FakeSupabase())
     
-    # Rulăm pipeline-ul asincron
+    # 1. Definim funcția asincronă mai întâi
+    async def dummy_step(r_id):
+        return None
+
+    # 2. O setăm prin monkeypatch înainte de rulare
+    monkeypatch.setattr("app.agent.orchestrator.run_diagnose", dummy_step)
+    monkeypatch.setattr("app.agent.orchestrator.run_strategy", dummy_step)
+    
+    # 3. Rulăm pipeline-ul
     await run_pipeline(fake_run_id)
     
-    # La final, conform specificațiilor, trebuie să ajungă la awaiting_approval
     assert state["status"] == "awaiting_approval"
     assert state["error"] is None
+

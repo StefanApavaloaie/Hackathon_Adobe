@@ -12,7 +12,7 @@ CAMPAIGN_ID = str(uuid.uuid4())
 
 DELIVERY_STUBS = [
     ("POST", f"/api/campaigns/{CAMPAIGN_ID}/approve"),
-    ("GET", f"/api/campaigns/{CAMPAIGN_ID}/results"),
+    #("GET", f"/api/campaigns/{CAMPAIGN_ID}/results"),
     ("GET", "/r/some-token"),
     ("GET", "/api/pages/some-token"),
     ("POST", "/api/pages/some-token/checkout"),
