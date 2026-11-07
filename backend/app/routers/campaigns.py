@@ -29,7 +29,8 @@ async def get_campaign(campaign_id: UUID):
             "id": c["id"], 
             "label": c["label"], 
             "summary": c["summary"], 
-            "customer_count": c["customer_count"], 
+            "customer_count": c["customer_count"],
+            "mrr_at_stake_cents": c["mrr_at_stake_cents"],
             "variants": []
         } for c in cohorts_res.data
     }
