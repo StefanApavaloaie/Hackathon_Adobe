@@ -84,8 +84,121 @@
   letter-spacing: -0.02em;
 }
 
-.campaignbar__cta {
+.campaignbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
   margin-left: auto;
+}
+
+.campaignbar__actions .btn {
+  margin: 0;
+}
+
+/* Agent run progress, under the campaign bar */
+
+.runbar {
+  border-bottom: 1px solid var(--line);
+  background: var(--tint);
+}
+
+.runbar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-5);
+  max-width: calc(var(--content) + 2 * var(--gut));
+  min-height: 48px;
+  margin: 0 auto;
+  padding: var(--s-2) var(--gut);
+}
+
+.runbar__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--wine-ink);
+}
+
+.runbar__steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.runbar__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-2);
+}
+
+.runbar__step svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.4;
+}
+
+.runbar__step--done {
+  color: var(--wine-ink);
+}
+
+.runbar__step--current {
+  color: var(--ink);
+}
+
+/* The step in progress breathes, so the bar reads as working without a spinner. */
+.runbar__step--current::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--amber-500);
+  animation: runbar-pulse 1.4s var(--m-ease) infinite;
+}
+
+.runbar__step--failed {
+  color: var(--error);
+}
+
+.runbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+}
+
+.runbar__actions .btn,
+.runbar__actions button {
+  margin: 0;
+}
+
+.runbar__error {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.runbar--failed {
+  background: rgb(192 57 43 / 0.08);
+}
+
+@keyframes runbar-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
 }
 
 .tag {
@@ -819,5 +932,9 @@
   [data-reveal],
   .meter__fill {
     transition: none;
+  }
+
+  .runbar__step--current::after {
+    animation: none;
   }
 }

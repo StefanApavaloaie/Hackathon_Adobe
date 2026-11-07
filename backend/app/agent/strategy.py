@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Literal
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from app.services.supabase_client import get_supabase
@@ -29,12 +30,16 @@ logger = logging.getLogger(__name__)
 
 class VariantSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    label: str
+    # An enum in the JSON schema, so Groq's strict mode can only answer "A" or "B"
+    # (free text produced "Variant A", which the guardrails reject).
+    label: Literal["A", "B"]
+    # Short fields first: the model tended to drop `reasoning` when it came last,
+    # after the long page_content object.
+    reasoning: str
     offer_id: str
     subject: str
     body_text: str
     page_content: PageContent
-    reasoning: str
 
 class StrategySchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -71,7 +76,7 @@ async def run_strategy(run_id: UUID) -> None:
             sample_comments = [c["cancel_comment"] for c in customers if c.get("cancel_comment")]
         
         prompt_msgs = [
-            {"role": "system", "content": f"You are a retention marketing strategist. Write 2 win-back message variants (A and B) for the provided cohort. Choose offers from the catalog. {PAGE_INSTRUCTIONS}"},
+            {"role": "system", "content": f"You are a retention marketing strategist. Write 2 win-back message variants for the provided cohort, labelled exactly \"A\" and \"B\". Choose offers from the catalog by their id. Every variant must include every field: label, reasoning, offer_id, subject, body_text and page_content. {PAGE_INSTRUCTIONS}"},
             {"role": "user", "content": json.dumps({
                 "cohort_label": cohort["label"],
                 "cohort_summary": cohort["summary"],
@@ -102,8 +107,8 @@ async def run_strategy(run_id: UUID) -> None:
                     {"role": "user", "content": f"Your output violated business rules: {errors}. Fix them and try again."}
                 ])
                 
-            except LLMUnavailable:
-                logger.warning("LLM Unavailable during strategy step.")
+            except LLMUnavailable as exc:
+                logger.warning("LLM Unavailable during strategy step: %s", exc)
                 break
 
         # Fallback dacă a eșuat de 2 ori sau LLM e picat

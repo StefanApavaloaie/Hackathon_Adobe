@@ -1,6 +1,6 @@
 // Owned by frontend/Stefan. Display components for the dashboard. Each takes its data as props,
 // so the feature branches can pass real API data in place of DEMO.
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { type Cohort, type DashboardData, type ResultSide, money } from "./demoData";
 import { IconCheck, IconFlask, IconLive, IconReturn, IconShield, IconSpark } from "./icons";
@@ -15,11 +15,16 @@ const LINKS = [
 
 export type DataSource = "demo" | "partly" | "live";
 
-export function Navs({
-  campaignName,
-  status,
-  source = "demo",
-}: Pick<DashboardData, "campaignName" | "status"> & { source?: DataSource }) {
+interface NavsProps extends Pick<DashboardData, "campaignName" | "status"> {
+  source?: DataSource;
+  /** Starts a new agent run. Hidden when not provided. */
+  onNewRun?: () => void;
+  /** True while a run is starting or in progress. */
+  runActive?: boolean;
+  children?: ReactNode;
+}
+
+export function Navs({ campaignName, status, source = "demo", onNewRun, runActive = false, children }: NavsProps) {
   return (
     <div className="navs">
       <header className="globalnav">
@@ -46,10 +51,68 @@ export function Navs({
             {source === "live" ? "Live data" : source === "partly" ? "Partly demo" : "Demo data"}
           </span>
           <span className="tag tag--status">{status}</span>
-          <a className="btn btn--primary btn--sm campaignbar__cta" href="#decision">
-            Approve
-          </a>
+          <div className="campaignbar__actions">
+            {onNewRun && (
+              <button
+                type="button"
+                className="btn btn--sm"
+                aria-disabled={runActive}
+                onClick={runActive ? undefined : onNewRun}
+              >
+                {runActive ? "Run in progress" : "New run"}
+              </button>
+            )}
+            <a className="btn btn--primary btn--sm campaignbar__cta" href="#decision">
+              Approve
+            </a>
+          </div>
         </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+interface RunBarProps {
+  steps: { id: string; label: string; detail: string }[];
+  stepIndex: number;
+  status: string | null;
+  error: string | null;
+  onResume: () => void;
+  onDismiss: () => void;
+}
+
+/** Progress of the agent run in flight, shown under the campaign bar. */
+export function RunBar({ steps, stepIndex, status, error, onResume, onDismiss }: RunBarProps) {
+  const failed = status === "failed";
+  return (
+    <div className={`runbar${failed ? " runbar--failed" : ""}`} role="status" aria-live="polite">
+      <div className="runbar__inner">
+        <p className="runbar__title">
+          {failed ? "The run stopped." : status === null ? "Starting the agent…" : `${steps[stepIndex].detail}…`}
+        </p>
+        <ol className="runbar__steps" aria-label="Run progress">
+          {steps.map((step, i) => {
+            const state = i < stepIndex ? "done" : i === stepIndex && status !== null ? (failed ? "failed" : "current") : "todo";
+            return (
+              <li key={step.id} className={`runbar__step runbar__step--${state}`}>
+                {state === "done" && <IconCheck />}
+                {step.label}
+              </li>
+            );
+          })}
+        </ol>
+        {failed && (
+          <div className="runbar__actions">
+            {error && <p className="runbar__error">{error}</p>}
+            <button type="button" className="btn btn--sm" onClick={onResume}>
+              Resume run
+            </button>
+            <button type="button" className="btn--link" onClick={onDismiss}>
+              Dismiss
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
