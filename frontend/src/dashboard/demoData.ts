@@ -14,6 +14,10 @@ export interface ResultSide {
   recoveredMonthly: number;
   sent: number;
   wonBack: number;
+  /** Funnel steps. Present only for real data; demo data has none. */
+  clicked?: number;
+  pageViewed?: number;
+  startedCheckout?: number;
 }
 
 export interface DashboardData {

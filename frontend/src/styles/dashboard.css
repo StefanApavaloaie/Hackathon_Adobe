@@ -69,7 +69,7 @@
 
 .campaignbar {
   border-bottom: 1px solid var(--line);
-  background: rgb(250 248 247 / 0.94);
+  background: var(--surface);
 }
 
 .campaignbar__inner {
@@ -107,6 +107,29 @@
 
 .tag--status {
   color: var(--ink-2);
+}
+
+.tag--live {
+  background: rgb(39 132 91 / 0.12);
+  color: #1d6747;
+}
+
+.tag--live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+}
+
+.section__source {
+  margin-top: var(--s-4);
+  text-align: center;
+}
+
+.btn--primary[aria-disabled="true"],
+.btn--link[aria-disabled="true"] {
+  cursor: default;
 }
 
 .tag--status::before {

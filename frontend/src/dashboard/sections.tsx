@@ -13,7 +13,11 @@ const LINKS = [
   { href: "#next", label: "Next step" },
 ];
 
-export function Navs({ campaignName, status }: Pick<DashboardData, "campaignName" | "status">) {
+export function Navs({
+  campaignName,
+  status,
+  partlyLive = false,
+}: Pick<DashboardData, "campaignName" | "status"> & { partlyLive?: boolean }) {
   return (
     <div className="navs">
       <header className="globalnav">
@@ -36,7 +40,7 @@ export function Navs({ campaignName, status }: Pick<DashboardData, "campaignName
       <div className="campaignbar">
         <div className="campaignbar__inner">
           <p className="campaignbar__name">{campaignName}</p>
-          <span className="tag tag--demo">Demo data</span>
+          <span className="tag tag--demo">{partlyLive ? "Partly demo" : "Demo data"}</span>
           <span className="tag tag--status">{status}</span>
           <a className="btn btn--primary btn--sm campaignbar__cta" href="#decision">
             Approve
@@ -47,7 +51,21 @@ export function Navs({ campaignName, status }: Pick<DashboardData, "campaignName
   );
 }
 
-export function Hero({ data }: { data: DashboardData }) {
+interface HeroProps {
+  data: DashboardData;
+  /** True when a real campaign is loaded, so the actions call the API. */
+  connected?: boolean;
+  campaignStatus?: string | null;
+  busy?: boolean;
+  message?: string | null;
+  onApprove?: () => void;
+  onReject?: () => void;
+}
+
+export function Hero({ data, connected = false, campaignStatus = null, busy = false, message, onApprove, onReject }: HeroProps) {
+  const canAct = connected && campaignStatus === "draft" && !busy;
+  const approved = campaignStatus === "approved" || campaignStatus === "sending" || campaignStatus === "sent";
+  const note = message ?? (connected ? null : "Demo: approving connects once a campaign is loaded.");
   return (
     <section className="hero" id="top" aria-labelledby="hero-title">
       <h1 id="hero-title">
@@ -57,17 +75,33 @@ export function Hero({ data }: { data: DashboardData }) {
         {data.recipients} cancellations. {data.cohorts.length} reasons. One decision.
       </p>
       <div className="hero__actions" id="decision">
-        <button type="button" className="btn--primary btn--lg" aria-disabled="true" aria-describedby="decision-note">
+        <button
+          type="button"
+          className="btn--primary btn--lg"
+          aria-disabled={!canAct}
+          aria-describedby={note ? "decision-note" : undefined}
+          onClick={canAct ? onApprove : undefined}
+        >
           <IconCheck />
-          Approve &amp; send
+          {busy ? "Working…" : approved ? "Approved" : "Approve & send"}
         </button>
-        <button type="button" className="btn--link" aria-disabled="true" aria-describedby="decision-note">
-          Reject proposal
-        </button>
+        {!approved && (
+          <button
+            type="button"
+            className="btn--link"
+            aria-disabled={!canAct}
+            aria-describedby={note ? "decision-note" : undefined}
+            onClick={canAct ? onReject : undefined}
+          >
+            Reject proposal
+          </button>
+        )}
       </div>
-      <p className="hero__note" id="decision-note">
-        Demo: approving connects once the agent is live.
-      </p>
+      {note && (
+        <p className="hero__note" id="decision-note" role="status">
+          {note}
+        </p>
+      )}
       <ol className="steps" aria-label="Agent progress">
         {data.steps.map((step, index) => {
           const state = index < data.currentStep ? "done" : index === data.currentStep ? "current" : "todo";
@@ -181,6 +215,24 @@ function ResultCard({ kind, side }: { kind: "live" | "simulated"; side: ResultSi
           <dt>Sent</dt>
           <dd className="num">{side.sent}</dd>
         </div>
+        {side.clicked !== undefined && (
+          <div>
+            <dt>Clicked</dt>
+            <dd className="num">{side.clicked}</dd>
+          </div>
+        )}
+        {side.pageViewed !== undefined && (
+          <div>
+            <dt>Page viewed</dt>
+            <dd className="num">{side.pageViewed}</dd>
+          </div>
+        )}
+        {side.startedCheckout !== undefined && (
+          <div>
+            <dt>Started checkout</dt>
+            <dd className="num">{side.startedCheckout}</dd>
+          </div>
+        )}
         <div>
           <dt>Won back</dt>
           <dd className="num rows__win">{side.wonBack}</dd>
@@ -190,7 +242,7 @@ function ResultCard({ kind, side }: { kind: "live" | "simulated"; side: ResultSi
   );
 }
 
-export function Results({ results }: { results: DashboardData["results"] }) {
+export function Results({ results, live = false }: { results: DashboardData["results"]; live?: boolean }) {
   return (
     <section className="section section--tinted" id="results" aria-labelledby="results-title">
       <div data-reveal>
@@ -198,6 +250,9 @@ export function Results({ results }: { results: DashboardData["results"] }) {
           Results, kept honest.
         </h2>
         <p className="section__lead">Live and simulated numbers sit side by side. They are never added together.</p>
+        <p className="section__source">
+          <span className={`tag ${live ? "tag--live" : "tag--demo"}`}>{live ? "From the campaign" : "Demo data"}</span>
+        </p>
       </div>
       <div className="results">
         <ResultCard kind="live" side={results.live} />
