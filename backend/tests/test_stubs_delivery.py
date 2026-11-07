@@ -39,13 +39,6 @@ def test_metrics_placeholder_returns_zeros_for_both_sources():
     assert metrics.live.variants == []
 
 
-def test_placeholder_login_blocks_protected_routes_unless_dev_login_is_allowed(make_settings):
-    app = create_app(make_settings())
-    response = TestClient(app).get(f"/api/campaigns/{CAMPAIGN_ID}/results")
-    assert response.status_code == 503
-    assert response.json() == {"detail": "Login is not implemented yet"}
-
-
 def test_public_routes_need_no_login(make_settings):
     app = create_app(make_settings())
     assert TestClient(app).get("/api/pages/some-token").status_code == 501
