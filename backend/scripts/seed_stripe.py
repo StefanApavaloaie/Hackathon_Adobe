@@ -24,6 +24,7 @@ PRICE_CENTS = 4900
 SIMULATED_COUNT = 200
 CHURN_WINDOW_DAYS = 90
 TEST_PAYMENT_METHOD = "pm_card_visa"
+TRIAL_DAYS = 30
 RANDOM_SEED = 42
 
 STRIPE_FEEDBACK_VALUES = {
@@ -208,9 +209,11 @@ def create_cancelled_subscriber(stripe: StripeClient, spec: dict, price_id: str)
         "invoice_settings": {"default_payment_method": TEST_PAYMENT_METHOD},
         "metadata": metadata,
     })
+    # A trial means Stripe charges nothing before we cancel, so seeding creates no payments.
     subscription = stripe.v1.subscriptions.create({
         "customer": customer.id,
         "items": [{"price": price_id}],
+        "trial_period_days": TRIAL_DAYS,
         "metadata": metadata,
     })
     stripe.v1.subscriptions.cancel(
