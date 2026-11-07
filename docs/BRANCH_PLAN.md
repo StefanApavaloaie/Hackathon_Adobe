@@ -123,6 +123,15 @@ Neither branch edits these. Change them only through a small pull request to `ma
 2. Confirm `ALLOW_DEV_AUTH` is unset on Render, and that the real login check is in place before deploying.
 3. **Stretch:** execute the recommendation as a second round.
 
+## Dashboard display components (added on `frontend/Stefan`)
+
+The dashboard at `/` now shows the reference design with **demo data**. It no longer mounts `RunPanel`, `ApprovalPanel`, `ResultsPanel` or `ReportPanel`.
+
+- **Where:** `frontend/src/dashboard/sections.tsx` holds `Hero`, `Guardrails`, `Reasons`, `Results` and `NextStep`. Each takes its data as props, and the types are in `frontend/src/dashboard/demoData.ts`.
+- **To connect real data:** load it from the API, map it to the `DashboardData` shape, and pass it in place of `DEMO` in `DashboardPage.tsx`. Remove the "Demo data" label once nothing on the page is demo.
+- **Panels:** the panel files still exist. Logic built there (loading, approve, reject, polling) can move into a hook that feeds these components. Approve and reject are display-only buttons until wired up.
+- **Ownership:** `frontend/src/dashboard/` and `frontend/src/styles/` belong to the front-end lead. Change them through a pull request to `main`.
+
 ## Suggested people per branch
 
 - **Branch A:** Backend 1 plus the innovation teammate, who builds page generation and the approval screen that previews the pages.

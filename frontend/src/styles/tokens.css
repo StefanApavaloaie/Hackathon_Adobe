@@ -1,0 +1,101 @@
+/*
+  Design tokens. Owned by frontend/Stefan.
+  Colours follow the reference pictures in frontend/ref_pictures/.
+*/
+
+:root {
+  /* Wine and crimson: the brand fields */
+  --wine-nav: #5e1e26;
+  --wine-950: #3e0710;
+  --wine-900: #5a0b16;
+  --wine-800: #6e0e1a;
+  --wine-700: #8a1720;
+  --wine-ink: #7a0f1c;
+
+  /* Warm neutrals */
+  --ground: #f3efee;
+  --surface: #faf8f7;
+  --tint: #efe6e5;
+  --line: #e3d9d8;
+  --ink: #221214;
+  --ink-2: #6f5d5c;
+
+  /* Amber: the primary action, and figures on crimson */
+  --amber-400: #f5b731;
+  --amber-500: #efa21b;
+  --amber-600: #e28a0b;
+  --on-amber: #3b1f05;
+
+  /* Functional */
+  --white: #ffffff;
+  --success: #27845b;
+  --error: #c0392b;
+
+  /* On crimson fields */
+  --on-wine: #ffffff;
+  --on-wine-2: rgb(255 255 255 / 0.78);
+  --on-wine-line: rgb(255 255 255 / 0.16);
+  --on-wine-tile: rgb(255 255 255 / 0.08);
+
+  --crimson: linear-gradient(135deg, var(--wine-900) 0%, var(--wine-800) 45%, var(--wine-700) 100%);
+  --amber-fill: linear-gradient(180deg, var(--amber-400) 0%, var(--amber-500) 55%, var(--amber-600) 100%);
+
+  /* Type */
+  --font: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --t-display: clamp(52px, 6.2vw, 104px);
+  --t-h2: clamp(40px, 4.4vw, 72px);
+  --t-h3: clamp(26px, 1.6vw + 14px, 36px);
+  --t-figure: clamp(56px, 5.6vw, 92px);
+  --t-stat: clamp(44px, 4.4vw, 72px);
+  --t-lead: clamp(19px, 0.5vw + 15px, 24px);
+  --t-body: 17px;
+  --t-small: 15px;
+  --t-label: 14px;
+
+  /* Spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+  --s-10: 144px;
+
+  /* Layout */
+  --nav-h: 52px;
+  --bar-h: 56px;
+  --content: 1040px;
+  --wide: 1240px;
+  --gut: 40px;
+
+  /* Radius */
+  --r-sm: 10px;
+  --r-md: 18px;
+  --r-lg: 28px;
+  --r-pill: 999px;
+
+  /* Motion */
+  --m-fast: 160ms;
+  --m-base: 200ms;
+  --m-reveal: 720ms;
+  --m-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --m-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --glow: 0 14px 30px -12px rgb(226 138 11 / 0.55);
+}
+
+@media (max-width: 1068px) {
+  :root {
+    --gut: 28px;
+  }
+}
+
+@media (max-width: 734px) {
+  :root {
+    --gut: 18px;
+    --bar-h: 52px;
+  }
+}

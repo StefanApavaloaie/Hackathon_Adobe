@@ -1,0 +1,605 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-07T13:33:11+00:00",
+  "title": "Design System: Win-back Agent",
+  "extensions": {
+    "colorMeta": {
+      "wine-nav": {
+        "role": "primary",
+        "displayName": "Nav Wine",
+        "canonical": "#5e1e26",
+        "tonalRamp": [
+          "#24090d",
+          "#3b1218",
+          "#5e1e26",
+          "#7c3540",
+          "#9e5a63",
+          "#c28d93",
+          "#e2c4c7",
+          "#f6eced"
+        ]
+      },
+      "wine-950": {
+        "role": "primary",
+        "displayName": "Deepest Wine",
+        "canonical": "#3e0710",
+        "tonalRamp": [
+          "#2a040a",
+          "#3e0710",
+          "#5a0b16",
+          "#6e0e1a",
+          "#7a0f1c",
+          "#8a1720",
+          "#c98a90",
+          "#f1dcde"
+        ]
+      },
+      "wine-900": {
+        "role": "primary",
+        "displayName": "Crimson Field (start)",
+        "canonical": "#5a0b16",
+        "tonalRamp": [
+          "#2a040a",
+          "#3e0710",
+          "#5a0b16",
+          "#6e0e1a",
+          "#7a0f1c",
+          "#8a1720",
+          "#c98a90",
+          "#f1dcde"
+        ]
+      },
+      "wine-800": {
+        "role": "primary",
+        "displayName": "Crimson Field (mid)",
+        "canonical": "#6e0e1a",
+        "tonalRamp": [
+          "#2a040a",
+          "#3e0710",
+          "#5a0b16",
+          "#6e0e1a",
+          "#7a0f1c",
+          "#8a1720",
+          "#c98a90",
+          "#f1dcde"
+        ]
+      },
+      "wine-700": {
+        "role": "primary",
+        "displayName": "Crimson Field (end)",
+        "canonical": "#8a1720",
+        "tonalRamp": [
+          "#2a040a",
+          "#3e0710",
+          "#5a0b16",
+          "#6e0e1a",
+          "#7a0f1c",
+          "#8a1720",
+          "#c98a90",
+          "#f1dcde"
+        ]
+      },
+      "wine-ink": {
+        "role": "primary",
+        "displayName": "Cellar Wine",
+        "canonical": "#7a0f1c",
+        "tonalRamp": [
+          "#2a040a",
+          "#3e0710",
+          "#5a0b16",
+          "#6e0e1a",
+          "#7a0f1c",
+          "#8a1720",
+          "#c98a90",
+          "#f1dcde"
+        ]
+      },
+      "amber-400": {
+        "role": "secondary",
+        "displayName": "Harvest Amber Light",
+        "canonical": "#f5b731",
+        "tonalRamp": [
+          "#3b1f05",
+          "#7a4306",
+          "#b86a08",
+          "#e28a0b",
+          "#efa21b",
+          "#f5b731",
+          "#f9d27e",
+          "#fdf0d2"
+        ]
+      },
+      "amber-500": {
+        "role": "secondary",
+        "displayName": "Harvest Amber",
+        "canonical": "#efa21b",
+        "tonalRamp": [
+          "#3b1f05",
+          "#7a4306",
+          "#b86a08",
+          "#e28a0b",
+          "#efa21b",
+          "#f5b731",
+          "#f9d27e",
+          "#fdf0d2"
+        ]
+      },
+      "amber-600": {
+        "role": "secondary",
+        "displayName": "Harvest Amber Deep",
+        "canonical": "#e28a0b",
+        "tonalRamp": [
+          "#3b1f05",
+          "#7a4306",
+          "#b86a08",
+          "#e28a0b",
+          "#efa21b",
+          "#f5b731",
+          "#f9d27e",
+          "#fdf0d2"
+        ]
+      },
+      "on-amber": {
+        "role": "secondary",
+        "displayName": "Amber Ink",
+        "canonical": "#3b1f05",
+        "tonalRamp": [
+          "#3b1f05",
+          "#7a4306",
+          "#b86a08",
+          "#e28a0b",
+          "#efa21b",
+          "#f5b731",
+          "#f9d27e",
+          "#fdf0d2"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Warm Ground",
+        "canonical": "#f3efee",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#faf8f7",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "tint": {
+        "role": "neutral",
+        "displayName": "Rose Tint",
+        "canonical": "#efe6e5",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e3d9d8",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Near-Black Ink",
+        "canonical": "#221214",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "#6f5d5c",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "on-wine": {
+        "role": "neutral",
+        "displayName": "On-Wine White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "on-wine-2": {
+        "role": "neutral",
+        "displayName": "On-Wine Secondary",
+        "canonical": "rgb(255 255 255 / 0.78)",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "on-wine-line": {
+        "role": "neutral",
+        "displayName": "On-Wine Rule",
+        "canonical": "rgb(255 255 255 / 0.16)",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "on-wine-tile": {
+        "role": "neutral",
+        "displayName": "On-Wine Tile",
+        "canonical": "rgb(255 255 255 / 0.08)",
+        "tonalRamp": [
+          "#221214",
+          "#3f2e2f",
+          "#6f5d5c",
+          "#a79796",
+          "#e3d9d8",
+          "#efe6e5",
+          "#f3efee",
+          "#faf8f7"
+        ]
+      },
+      "success": {
+        "role": "functional",
+        "displayName": "Success Green",
+        "canonical": "#27845b",
+        "tonalRamp": [
+          "#0b2a1c",
+          "#134a32",
+          "#1d6847",
+          "#27845b",
+          "#4fa37c",
+          "#82c1a2",
+          "#b9dcca",
+          "#e6f3ec"
+        ]
+      },
+      "error": {
+        "role": "functional",
+        "displayName": "Error Red",
+        "canonical": "#c0392b",
+        "tonalRamp": [
+          "#3a0f0b",
+          "#661a13",
+          "#93261b",
+          "#c0392b",
+          "#d4675b",
+          "#e3988f",
+          "#f0c6c1",
+          "#faeceb"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The one hero statement; key figure in Cellar Wine."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Centred section titles, max 16ch; optional Muted Ink second line."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Cohort and result headings, next-step title."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Money figures on cohort and result cards; units at 0.4em."
+      },
+      "stat": {
+        "displayName": "Stat",
+        "purpose": "Guardrail counts on the crimson band."
+      },
+      "lead": {
+        "displayName": "Lead",
+        "purpose": "One or two lines under a headline, Muted Ink, max 40ch."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Footer note."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, table heads, footer headings, system status; sentence case."
+      }
+    },
+    "gradients": [
+      {
+        "name": "crimson",
+        "value": "linear-gradient(135deg, #5a0b16 0%, #6e0e1a 45%, #8a1720 100%)",
+        "purpose": "Crimson bands and the crimson cohort tile."
+      },
+      {
+        "name": "amber-fill",
+        "value": "linear-gradient(180deg, #f5b731 0%, #efa21b 55%, #e28a0b 100%)",
+        "purpose": "Primary button and exposure meter fill."
+      },
+      {
+        "name": "simulated-stripes",
+        "value": "repeating-linear-gradient(-45deg, rgb(122 15 28 / 0.05) 0 12px, transparent 12px 24px)",
+        "purpose": "Marks simulated result cards. Deliberate; the detector's repeating-stripes-gradient finding is intentional."
+      }
+    ],
+    "shadows": [
+      {
+        "name": "glow",
+        "value": "0 14px 30px -12px rgb(226 138 11 / 0.55)",
+        "purpose": "Primary pill at rest."
+      },
+      {
+        "name": "glow-hover",
+        "value": "0 18px 36px -12px rgb(226 138 11 / 0.7)",
+        "purpose": "Primary pill hover, with a 1px lift."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 4px rgb(122 15 28 / 0.14)",
+        "purpose": "Focused fields."
+      }
+    ],
+    "motion": [
+      {
+        "name": "m-fast",
+        "value": "160ms",
+        "purpose": "Press transforms."
+      },
+      {
+        "name": "m-base",
+        "value": "200ms",
+        "purpose": "Colour, shadow and chevron transitions."
+      },
+      {
+        "name": "m-reveal",
+        "value": "720ms",
+        "purpose": "Scroll fade-up of 28px, staggered 90ms per item; below-the-fold only, off under reduced motion."
+      },
+      {
+        "name": "m-ease",
+        "value": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "purpose": "Default easing for state transitions."
+      },
+      {
+        "name": "m-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Reveal and the exposure meter fill (1100ms, 250ms delay)."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "tablet",
+        "value": "1068px"
+      },
+      {
+        "name": "single-column",
+        "value": "834px"
+      },
+      {
+        "name": "nav-wrap",
+        "value": "820px"
+      },
+      {
+        "name": "phone",
+        "value": "734px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one amber action, e.g. Approve and send.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg>Approve &amp; send</button>",
+      "css": ".ds-btn-primary{font-family:var(--font, Manrope, system-ui, sans-serif);display:inline-flex;align-items:center;gap:8px;min-height:60px;padding:0 34px;border:0;border-radius:999px;background:linear-gradient(180deg,#f5b731 0%,#efa21b 55%,#e28a0b 100%);color:#3b1f05;font-size:19px;font-weight:700;line-height:1;letter-spacing:-0.01em;cursor:pointer;box-shadow:0 14px 30px -12px rgb(226 138 11 / 0.55);transition:box-shadow 200ms cubic-bezier(0.2,0.8,0.2,1),transform 160ms cubic-bezier(0.2,0.8,0.2,1);}.ds-btn-primary:hover{box-shadow:0 18px 36px -12px rgb(226 138 11 / 0.7);transform:translateY(-1px);}.ds-btn-primary:active{transform:translateY(1px) scale(0.98);}.ds-btn-primary:focus-visible{outline:2px solid #7a0f1c;outline-offset:3px;}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Ink-stroked pill for any non-primary action.",
+      "html": "<button class=\"ds-btn-secondary\">View details</button>",
+      "css": ".ds-btn-secondary{font-family:var(--font, Manrope, system-ui, sans-serif);display:inline-flex;align-items:center;min-height:48px;padding:0 26px;border:1.5px solid #221214;border-radius:999px;background:transparent;color:#221214;font-size:17px;font-weight:700;line-height:1;letter-spacing:-0.01em;cursor:pointer;transition:background-color 200ms cubic-bezier(0.2,0.8,0.2,1),color 200ms cubic-bezier(0.2,0.8,0.2,1),transform 160ms cubic-bezier(0.2,0.8,0.2,1);}.ds-btn-secondary:hover{background:#221214;color:#faf8f7;}.ds-btn-secondary:active{transform:translateY(1px) scale(0.98);}.ds-btn-secondary:focus-visible{outline:2px solid #7a0f1c;outline-offset:3px;}"
+    },
+    {
+      "name": "Link Button",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "Wine text action with a drawn chevron, e.g. Reject proposal.",
+      "html": "<button class=\"ds-btn-link\">Reject proposal</button>",
+      "css": ".ds-btn-link{font-family:var(--font, Manrope, system-ui, sans-serif);display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;border:0;background:none;color:#7a0f1c;font-size:17px;font-weight:600;line-height:1;cursor:pointer;transition:color 200ms cubic-bezier(0.2,0.8,0.2,1);}.ds-btn-link::after{content:\"\";width:7px;height:7px;border-top:1.8px solid currentColor;border-right:1.8px solid currentColor;transform:rotate(45deg);transition:transform 200ms cubic-bezier(0.2,0.8,0.2,1);}.ds-btn-link:hover{color:#6e0e1a;}.ds-btn-link:hover::after{transform:translate(3px) rotate(45deg);}.ds-btn-link:focus-visible{outline:2px solid #7a0f1c;outline-offset:3px;border-radius:6px;}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled field with a wine focus halo.",
+      "html": "<label class=\"ds-label\">Email<input class=\"ds-input\" placeholder=\"you@company.com\"></label>",
+      "css": ".ds-label{font-family:var(--font, Manrope, system-ui, sans-serif);display:block;font-size:14px;font-weight:600;color:#6f5d5c;}.ds-input{font-family:var(--font, Manrope, system-ui, sans-serif);display:block;width:100%;min-height:52px;margin-top:8px;padding:12px 16px;border:1px solid #e3d9d8;border-radius:10px;background:#fff;color:#221214;font-size:17px;transition:border-color 200ms cubic-bezier(0.2,0.8,0.2,1),box-shadow 200ms cubic-bezier(0.2,0.8,0.2,1);}.ds-input::placeholder{color:#6f5d5c;}.ds-input:focus{outline:none;border-color:#7a0f1c;box-shadow:0 0 0 4px rgb(122 15 28 / 0.14);}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "global-nav",
+      "description": "Sticky wine global nav over the light campaign bar with demo and status tags.",
+      "html": "<div><nav class=\"ds-nav\"><span class=\"ds-nav-brand\">Win-back</span><span class=\"ds-nav-links\"><a href=\"#\">Overview</a><a href=\"#\">Guardrails</a><a href=\"#\">Results</a></span></nav><div class=\"ds-bar\"><strong>Demo campaign</strong><span class=\"ds-tag-demo\">Demo data</span><span class=\"ds-tag-status\">Awaiting approval</span></div></div>",
+      "css": ".ds-nav{font-family:var(--font, Manrope, system-ui, sans-serif);display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:0 24px;background:#5e1e26;color:#fff;}.ds-nav-brand{font-size:17px;font-weight:800;letter-spacing:-0.02em;}.ds-nav-links{display:flex;gap:8px;}.ds-nav-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:rgb(255 255 255 / 0.78);font-size:14px;font-weight:500;text-decoration:none;transition:color 200ms cubic-bezier(0.2,0.8,0.2,1);}.ds-nav-links a:hover{color:#fff;}.ds-nav-links a:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:6px;}.ds-bar{font-family:var(--font, Manrope, system-ui, sans-serif);display:flex;align-items:center;gap:12px;min-height:56px;padding:0 24px;background:rgb(250 248 247 / 0.94);border-bottom:1px solid #e3d9d8;color:#221214;}.ds-bar strong{font-size:19px;font-weight:700;letter-spacing:-0.02em;}.ds-tag-demo,.ds-tag-status{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:0 10px;border-radius:999px;font-size:13px;font-weight:600;}.ds-tag-demo{background:#efe6e5;color:#7a0f1c;}.ds-tag-status{color:#6f5d5c;}.ds-tag-status::before{content:\"\";width:8px;height:8px;border-radius:50%;background:#efa21b;}"
+    },
+    {
+      "name": "Demo Tag",
+      "kind": "chip",
+      "refersTo": "tag-demo",
+      "description": "Labels demo data wherever it is shown.",
+      "html": "<span class=\"ds-tag\">Demo data</span>",
+      "css": ".ds-tag{font-family:var(--font, Manrope, system-ui, sans-serif);display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;background:#efe6e5;color:#7a0f1c;font-size:13px;font-weight:600;}"
+    },
+    {
+      "name": "Crimson Cohort Tile",
+      "kind": "card",
+      "refersTo": "cohort-crimson",
+      "description": "Crimson cohort card with amber-keyed variant pills; alternates with the light tile.",
+      "html": "<article class=\"ds-cohort\"><h3>Price-sensitive</h3><p class=\"ds-cohort-offer\">25% off for 3 months</p><p class=\"ds-cohort-fig\">$2,940</p><p class=\"ds-cohort-cap\">monthly revenue at stake</p><ul class=\"ds-variants\"><li><span>A</span>Keep your workspace, 25% off</li><li><span>B</span>We'd rather lower the price</li></ul></article>",
+      "css": ".ds-cohort{font-family:var(--font, Manrope, system-ui, sans-serif);display:flex;flex-direction:column;align-items:center;max-width:520px;padding:64px 48px;border-radius:28px;background:linear-gradient(135deg,#5a0b16 0%,#6e0e1a 45%,#8a1720 100%);color:#fff;text-align:center;}.ds-cohort h3{margin:0;font-size:32px;font-weight:800;line-height:1.1;letter-spacing:-0.03em;}.ds-cohort p{margin:0;}.ds-cohort .ds-cohort-offer{margin-top:12px;font-size:20px;color:rgb(255 255 255 / 0.78);}.ds-cohort .ds-cohort-fig{margin-top:48px;font-size:80px;font-weight:800;line-height:1;letter-spacing:-0.04em;}.ds-cohort .ds-cohort-cap{margin-top:8px;font-size:16px;color:rgb(255 255 255 / 0.78);}.ds-variants{display:grid;gap:12px;width:100%;max-width:420px;margin:32px 0 0;padding:0;list-style:none;text-align:left;}.ds-variants li{display:flex;align-items:center;gap:12px;min-height:52px;padding:8px 24px 8px 8px;border-radius:999px;background:rgb(255 255 255 / 0.08);font-size:16px;font-weight:500;}.ds-variants span{display:inline-grid;place-items:center;width:32px;height:32px;flex:none;border-radius:50%;background:#f5b731;color:#3b1f05;font-size:14px;font-weight:800;}"
+    },
+    {
+      "name": "Exposure Meter",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "Signature move: the amber fill scales to its share as the crimson band scrolls in.",
+      "html": "<div class=\"ds-meter-wrap\"><div class=\"ds-meter-head\"><span>Maximum discount exposure</span><span><strong>$3,900</strong> of $5,000</span></div><div class=\"ds-meter-track\"><div class=\"ds-meter-fill\"></div></div></div>",
+      "css": ".ds-meter-wrap{font-family:var(--font, Manrope, system-ui, sans-serif);max-width:620px;padding:32px;background:linear-gradient(135deg,#5a0b16 0%,#6e0e1a 45%,#8a1720 100%);color:#fff;}.ds-meter-head{display:flex;justify-content:space-between;gap:8px;font-size:16px;}.ds-meter-head strong{color:#f5b731;font-weight:800;}.ds-meter-track{height:8px;margin-top:12px;overflow:hidden;border-radius:999px;background:rgb(255 255 255 / 0.16);}.ds-meter-fill{height:100%;border-radius:inherit;background:linear-gradient(180deg,#f5b731 0%,#efa21b 55%,#e28a0b 100%);transform:scaleX(0.78);transform-origin:left;transition:transform 1100ms cubic-bezier(0.16,1,0.3,1) 250ms;}@media (prefers-reduced-motion: reduce){.ds-meter-fill{transition:none;}}"
+    },
+    {
+      "name": "Simulated Result Card",
+      "kind": "card",
+      "refersTo": "result-card",
+      "description": "Striped card that marks simulated results; never merged with live.",
+      "html": "<article class=\"ds-result\"><span class=\"ds-result-icon\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3\"/></svg></span><h3>Simulated</h3><p class=\"ds-result-note\">Seeded customers, not real revenue</p><p class=\"ds-result-fig\">$2,312<span>/mo</span></p><dl class=\"ds-rows\"><div><dt>Sent</dt><dd>200</dd></div><div><dt>Won back</dt><dd class=\"ds-win\">41</dd></div></dl></article>",
+      "css": ".ds-result{font-family:var(--font, Manrope, system-ui, sans-serif);display:flex;flex-direction:column;align-items:center;max-width:440px;padding:48px 48px 32px;border-radius:28px;background:repeating-linear-gradient(-45deg,rgb(122 15 28 / 0.05) 0 12px,transparent 12px 24px),#f3efee;color:#221214;text-align:center;}.ds-result-icon{display:grid;place-items:center;width:60px;height:60px;border-radius:50%;border:1.5px dashed #7a0f1c;color:#7a0f1c;}.ds-result h3{margin:16px 0 0;font-size:32px;font-weight:800;letter-spacing:-0.03em;}.ds-result-note{margin:4px 0 0;font-size:16px;color:#6f5d5c;}.ds-result-fig{margin:32px 0 0;color:#7a0f1c;font-size:80px;font-weight:800;line-height:1;letter-spacing:-0.04em;}.ds-result-fig span{font-size:0.4em;letter-spacing:-0.02em;}.ds-rows{width:100%;margin:32px 0 0;border-top:1px solid #e3d9d8;}.ds-rows div{display:flex;justify-content:space-between;align-items:baseline;padding:16px 0;border-bottom:1px solid #e3d9d8;}.ds-rows dt{color:#6f5d5c;}.ds-rows dd{margin:0;font-size:24px;font-weight:800;}.ds-rows .ds-win{color:#7a0f1c;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Approval Stage",
+    "overview": "The interface works like a product launch page with one decision on it. A very large, tight Manrope headline states what is at stake. Below it, the evidence comes in bold full-bleed bands: deep crimson fields with white type and amber figures, set between calm warm off-white sections. One bright amber pill carries the only action that matters. Density is low on purpose. Everything is centred, set large, and readable from the back of a room on a projector.\n\nThe look and colours follow the user-supplied reference pictures in `frontend/ref_pictures/`, which are binding. Wine is the brand voice. It appears in the nav, in crimson bands and tiles, and in wine-coloured figures on the light ground. Amber is scarce. Depth comes from colour fields and tonal tiles, not from shadows. The one exception is the warm glow under the amber action. There is no dark theme, because the references show none.\n\nHonesty is built into the look. Demo figures are labelled where they appear. Simulated results get their own striped card and are never visually merged with live results.",
+    "keyCharacteristics": [
+      "Warm off-white ground with deep crimson gradient bands and tiles alternating against light surfaces.",
+      "One typeface, Manrope, set at weight 800 with tight negative tracking for headlines and figures.",
+      "Amber reserved for the primary action and for figures and icons on crimson.",
+      "Pills everywhere you can interact: buttons, tags, variant rows, meter track.",
+      "Large soft corners (28px) on cards, centred composition, generous vertical rhythm (96 to 144px bands).",
+      "Requested scroll fade-ins, visible by default. The signature move is the exposure meter filling as its band arrives."
+    ],
+    "rules": [
+      {
+        "name": "The Amber Stays Off Light Text Rule",
+        "body": "Amber is never used for text on the light ground. Amber on #f3efee fails contrast. On light surfaces, emphasis is bold ink or Cellar Wine. A state that needs amber gets an amber dot next to ink text, as with the current step and the status tag.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Bright Action Rule",
+        "body": "Amber fill means \"the primary action\", and only one action wears it. The sticky bar's small Approve repeats the hero's action rather than adding a second one, and it is hidden on phones. Everything else is an ink-stroked pill or a wine text link.",
+        "section": "colors"
+      },
+      {
+        "name": "The Wine Carries Figures Rule",
+        "body": "Money figures are Cellar Wine on light ground and amber or white on crimson. Figures are never ink-grey.",
+        "section": "colors"
+      },
+      {
+        "name": "The Big and Tight Rule",
+        "body": "Weights 700 and up always get negative tracking (-0.01em to -0.04em). The larger the size, the tighter the tracking.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "No tracked capitals and no kickers or eyebrows above headlines. Status and context that a reference might put in an eyebrow go into the campaign bar as tags.",
+        "section": "typography"
+      },
+      {
+        "name": "The Colour Is Depth Rule",
+        "body": "Cards and tiles never cast shadows. They separate from the ground by fill alone.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep amber for the primary action and for figures, icons and keys on crimson. On light ground, amber appears only as non-text marks: state dots beside ink text and the single next-step accent icon (amber-600).",
+      "**Do** set headlines and figures in Manrope 800 with tight negative tracking, and put the key figure of a headline in Cellar Wine.",
+      "**Do** alternate crimson and light fields to build rhythm, with 28px corners on tiles and pills for everything interactive.",
+      "**Do** label demo and simulated data where it appears (demo tag, hero note, footer note, striped simulated card). Keep display components prop-driven so real data can replace the demo set.",
+      "**Do** keep content visible by default. Motion is an enhancement that turns off under reduced motion.",
+      "**Do** keep tap targets at least 44px high."
+    ],
+    "donts": [
+      "**Don't** set amber text on the light ground (#f3efee). It fails contrast.",
+      "**Don't** add kickers, eyebrows or tracked capitals above headlines. Put status in campaign-bar tags.",
+      "**Don't** add shadows to cards or tiles. The amber glow belongs to the primary action alone.",
+      "**Don't** add or sum live and simulated figures, or show them in one card.",
+      "**Don't** add a dark theme. The references show none.",
+      "**Don't** give amber fill to any action other than the primary one. Repeating that same action in the campaign bar is fine."
+    ]
+  }
+}

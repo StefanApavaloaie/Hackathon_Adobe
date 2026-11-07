@@ -3,6 +3,9 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
+import "./styles/tokens.css";
+import "./styles/base.css";
+
 import RequireLogin from "./components/RequireLogin";
 import DashboardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
