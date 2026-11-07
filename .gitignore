@@ -15,6 +15,7 @@ dist/
 
 # Local tooling
 .vercel/
+.impeccable/
 .DS_Store
 Thumbs.db
 *.log
