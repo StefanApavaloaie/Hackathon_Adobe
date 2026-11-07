@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.agent.report import CampaignNotFound, generate_report
 from app.auth import require_user
 from app.services.supabase_client import get_supabase
 
@@ -81,3 +82,11 @@ async def reject_campaign(campaign_id: UUID):
     supabase.table("campaigns").update({"status": "rejected"}).eq("id", str(campaign_id)).execute()
     
     return {"message": "Campaign rejected successfully"}
+
+@router.post("/{campaign_id}/report")
+async def create_report(campaign_id: UUID):
+    """Generate the agent's recommendation on demand. It never runs automatically."""
+    try:
+        return await generate_report(campaign_id)
+    except CampaignNotFound:
+        raise HTTPException(status_code=404, detail="Campaign not found")
