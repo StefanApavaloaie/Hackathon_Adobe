@@ -40,6 +40,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     for module in (health, runs, campaigns, usage, sending, pages, tracking, webhooks):
         app.include_router(module.router)
 
+    @app.get("/")
+    async def root():
+        return {"message": "Win-back Agent API", "docs": "/docs"}
+
     return app
 
 
