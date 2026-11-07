@@ -1,0 +1,7 @@
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+pydantic-settings==2.16.2
+httpx==0.28.1
+supabase==2.34.1
+stripe==16.1.0
+resend==2.52.0
