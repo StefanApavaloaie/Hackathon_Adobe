@@ -1,9 +1,8 @@
 # Owned by feature/delivery.
 import asyncio
-import uuid
-
 import httpx
 import pytest
+from fastapi import Depends
 from fastapi.testclient import TestClient
 from starlette.requests import Request
 
@@ -13,7 +12,15 @@ from app.main import create_app
 
 SUPABASE_URL = "https://project.supabase.co"
 SERVICE_KEY = "service-key"
-PROTECTED = f"/api/campaigns/{uuid.uuid4()}/results"
+PROTECTED = "/_test/protected"
+
+
+def add_protected_route(app) -> None:
+    """A route that only needs login, so these tests don't depend on any real route."""
+
+    @app.get(PROTECTED, dependencies=[Depends(require_user)])
+    def protected() -> dict:
+        return {"ok": True}
 
 
 def supabase_stub(calls: list[httpx.Request]):
@@ -40,6 +47,7 @@ def make_client(make_settings, calls):
         overrides.setdefault("supabase_service_key", SERVICE_KEY)
         settings = make_settings(**overrides)
         app = create_app(settings)
+        add_protected_route(app)
         app.dependency_overrides[get_settings] = lambda: settings
 
         async def mock_http_client():
@@ -71,8 +79,7 @@ def test_rejected_token_returns_401(make_client):
 
 def test_valid_token_reaches_the_route_and_asks_supabase_correctly(make_client, calls):
     response = make_client().get(PROTECTED, headers={"Authorization": "Bearer good-token"})
-    # Past the login check: the results route itself is still a stub.
-    assert response.status_code == 501
+    assert response.status_code == 200
     [request] = calls
     assert str(request.url) == f"{SUPABASE_URL}/auth/v1/user"
     assert request.headers["apikey"] == SERVICE_KEY
@@ -93,7 +100,7 @@ def test_valid_token_returns_the_user(make_settings, calls):
 
 def test_dev_bypass_works_when_allowed(make_client, calls):
     response = make_client(allow_dev_auth=True).get(PROTECTED)
-    assert response.status_code == 501
+    assert response.status_code == 200
     assert calls == []
 
 
@@ -109,6 +116,7 @@ def test_unconfigured_supabase_returns_503(make_client):
 def test_supabase_unreachable_returns_503(make_settings):
     settings = make_settings(supabase_url=SUPABASE_URL, supabase_service_key=SERVICE_KEY)
     app = create_app(settings)
+    add_protected_route(app)
     app.dependency_overrides[get_settings] = lambda: settings
 
     def down(request: httpx.Request) -> httpx.Response:

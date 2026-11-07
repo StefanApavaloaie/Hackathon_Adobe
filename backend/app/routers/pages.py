@@ -8,11 +8,11 @@ from pydantic import ValidationError
 
 from app.config import Settings, get_settings
 from app.contracts import PageContent
+from app.delivery.db import SupabaseStore
 from app.delivery.email_templates import first_name
 from app.delivery.tokens import looks_like_token
 from app.errors import ServiceNotConfigured
 from app.services.stripe_client import get_stripe
-from app.services.supabase_client import get_supabase
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +39,7 @@ class PageStore(Protocol):
     def add_event(self, recipient_id: str, event_type: str, source: str) -> None: ...
 
 
-class SupabasePageStore:
-    def __init__(self, db=None):
-        self.db = db or get_supabase()
-
+class SupabasePageStore(SupabaseStore):
     def get_page_data(self, token):
         rows = (
             self.db.table("recipients")

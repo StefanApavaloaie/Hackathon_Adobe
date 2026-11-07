@@ -9,7 +9,7 @@ from uuid import UUID
 
 from app.delivery.email_templates import build_email
 from app.services.email_client import is_allowed, send_email
-from app.services.supabase_client import get_supabase
+from app.delivery.db import SupabaseStore
 from app.simulator import simulate_responses
 
 logger = logging.getLogger(__name__)
@@ -126,10 +126,7 @@ def _chunks(items: list, size: int = 100):
         yield items[start : start + size]
 
 
-class SupabaseDeliveryStore:
-    def __init__(self, db=None):
-        self.db = db or get_supabase()
-
+class SupabaseDeliveryStore(SupabaseStore):
     def get_campaign(self, campaign_id):
         rows = self.db.table("campaigns").select("*").eq("id", campaign_id).limit(1).execute().data
         return rows[0] if rows else None

@@ -16,7 +16,7 @@ from app.delivery.send import (
     get_email_sender,
     send_campaign,
 )
-from app.errors import not_implemented
+from app.metrics import MetricsStore, compute_metrics, get_metrics_store
 from app.services.email_client import parse_allowlist
 
 router = APIRouter(prefix="/api/campaigns", tags=["sending"], dependencies=[Depends(require_user)])
@@ -55,5 +55,14 @@ def approve_campaign(
 
 
 @router.get("/{campaign_id}/results")
-async def get_results(campaign_id: UUID):
-    not_implemented()
+def get_results(
+    campaign_id: UUID,
+    campaigns: DeliveryStore = Depends(get_delivery_store),
+    metrics_store: MetricsStore = Depends(get_metrics_store),
+) -> dict:
+    """Campaign status plus live and simulated metrics, as separate objects. Never summed."""
+    campaign = campaigns.get_campaign(str(campaign_id))
+    if campaign is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Campaign not found")
+    metrics = compute_metrics(campaign_id, store=metrics_store)
+    return {"campaign_id": str(campaign_id), "status": campaign["status"], "metrics": metrics.model_dump(mode="json")}

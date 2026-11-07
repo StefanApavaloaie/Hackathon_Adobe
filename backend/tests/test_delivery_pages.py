@@ -169,3 +169,11 @@ def test_checkout_refuses_a_discounted_offer_whose_coupon_is_missing(client, str
 def test_checkout_with_unknown_token_returns_404(http, stripe):
     assert http.post("/api/pages/unknownTokenUnknownTok/checkout").status_code == 404
     assert stripe.sessions == []
+
+
+def test_public_page_routes_need_no_login(make_settings):
+    from app.main import create_app
+
+    app = create_app(make_settings())
+    # An unknown token, not a login error: public pages never ask for login.
+    assert TestClient(app).get("/api/pages/some-token").status_code == 404

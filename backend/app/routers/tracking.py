@@ -6,8 +6,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app.config import Settings, get_settings
+from app.delivery.db import SupabaseStore
 from app.delivery.tokens import looks_like_token
-from app.services.supabase_client import get_supabase
 
 router = APIRouter(tags=["tracking"])
 
@@ -18,10 +18,7 @@ class TrackingStore(Protocol):
     def unsubscribe_customer(self, customer_id: str, at: datetime) -> bool: ...
 
 
-class SupabaseTrackingStore:
-    def __init__(self, db=None):
-        self.db = db or get_supabase()
-
+class SupabaseTrackingStore(SupabaseStore):
     def get_recipient(self, token):
         rows = (
             self.db.table("recipients").select("id,customer_id,source").eq("token", token).limit(1).execute().data

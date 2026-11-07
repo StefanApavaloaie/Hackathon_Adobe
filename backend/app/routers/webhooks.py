@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.config import Settings, get_settings
 from app.errors import ServiceNotConfigured, not_implemented
-from app.services.supabase_client import get_supabase
+from app.delivery.db import SupabaseStore
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +24,7 @@ class WebhookStore(Protocol):
     def add_conversion(self, row: dict) -> None: ...
 
 
-class SupabaseWebhookStore:
-    def __init__(self, db=None):
-        self.db = db or get_supabase()
-
+class SupabaseWebhookStore(SupabaseStore):
     def is_processed(self, provider, event_id):
         rows = (
             self.db.table("processed_webhooks").select("event_id")
