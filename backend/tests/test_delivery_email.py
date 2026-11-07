@@ -48,8 +48,11 @@ def test_email_includes_click_and_unsubscribe_links_in_both_versions():
         assert UNSUB in version
 
 
-def test_email_sets_list_unsubscribe_header():
-    assert make_email().headers == {"List-Unsubscribe": f"<{UNSUB}>"}
+def test_email_sets_one_click_list_unsubscribe_headers():
+    assert make_email().headers == {
+        "List-Unsubscribe": f"<{UNSUB}>",
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    }
 
 
 def test_subject_has_no_line_breaks():

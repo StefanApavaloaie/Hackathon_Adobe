@@ -57,5 +57,6 @@ def build_email(
         subject=_single_line(subject),
         html=html,
         text=text,
-        headers={"List-Unsubscribe": f"<{unsubscribe_url}>"},
+        # One-click unsubscribe (RFC 8058): mail apps POST to the same /u/{token} URL.
+        headers={"List-Unsubscribe": f"<{unsubscribe_url}>", "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"},
     )
