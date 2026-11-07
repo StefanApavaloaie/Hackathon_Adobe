@@ -2,6 +2,8 @@
 // so the feature branches can pass real API data in place of DEMO.
 import type { CSSProperties, ReactNode } from "react";
 
+import { signOut, useSession } from "../lib/auth";
+
 import { type Cohort, type DashboardData, type ResultSide, money } from "./demoData";
 import { IconCheck, IconFlask, IconLive, IconReturn, IconShield, IconSpark } from "./icons";
 
@@ -24,6 +26,19 @@ interface NavsProps extends Pick<DashboardData, "campaignName" | "status"> {
   children?: ReactNode;
 }
 
+function SignOut() {
+  const session = useSession();
+  if (session.status !== "signed-in") return null;
+  return (
+    <div className="globalnav__account">
+      {session.email && <span className="globalnav__email">{session.email}</span>}
+      <button type="button" className="globalnav__signout" onClick={() => void signOut()}>
+        Sign out
+      </button>
+    </div>
+  );
+}
+
 export function Navs({ campaignName, status, source = "demo", onNewRun, runActive = false, children }: NavsProps) {
   return (
     <div className="navs">
@@ -42,6 +57,7 @@ export function Navs({ campaignName, status, source = "demo", onNewRun, runActiv
               ))}
             </ul>
           </nav>
+          <SignOut />
         </div>
       </header>
       <div className="campaignbar">
@@ -309,7 +325,59 @@ function ResultCard({ kind, side }: { kind: "live" | "simulated"; side: ResultSi
   );
 }
 
-export function Results({ results, live = false }: { results: DashboardData["results"]; live?: boolean }) {
+export interface CostValueUsage {
+  runTokens: number;
+  runCalls: number;
+  tokensToday: number;
+  dailyAllowance: number;
+  reserve: number;
+  costUsd: number;
+}
+
+/** What the agent cost next to what it recovered. Shown only with real usage, never demo figures. */
+function CostValue({ usage, recoveredMonthly }: { usage: CostValueUsage; recoveredMonthly: number }) {
+  const count = (n: number) => n.toLocaleString("en-US");
+  return (
+    <div className="costvalue" data-reveal>
+      <h3 className="costvalue__title">Cost vs value</h3>
+      <dl className="costvalue__stats">
+        <div>
+          <dt>Live revenue recovered</dt>
+          <dd className="num">
+            {money(recoveredMonthly)}
+            <span>/mo</span>
+          </dd>
+        </div>
+        <div>
+          <dt>LLM tokens for this run</dt>
+          <dd className="num">{count(usage.runTokens)}</dd>
+        </div>
+        <div>
+          <dt>LLM cost</dt>
+          <dd className="num">${usage.costUsd}</dd>
+        </div>
+      </dl>
+      <p className="costvalue__note">
+        {usage.runCalls > 0
+          ? `${usage.runCalls} model calls for this run. `
+          : "This run replayed saved model responses, so it used no tokens. "}
+        {count(usage.tokensToday)} of {count(usage.dailyAllowance)} tokens
+        used today, with {count(usage.reserve)} kept back for the demo. $0 is Groq's free tier: real customer volumes
+        would need a paid plan.
+      </p>
+    </div>
+  );
+}
+
+export function Results({
+  results,
+  live = false,
+  usage = null,
+}: {
+  results: DashboardData["results"];
+  live?: boolean;
+  usage?: CostValueUsage | null;
+}) {
   return (
     <section className="section section--tinted" id="results" aria-labelledby="results-title">
       <div data-reveal>
@@ -325,6 +393,7 @@ export function Results({ results, live = false }: { results: DashboardData["res
         <ResultCard kind="live" side={results.live} />
         <ResultCard kind="simulated" side={results.simulated} />
       </div>
+      {usage && <CostValue usage={usage} recoveredMonthly={live ? results.live.recoveredMonthly : 0} />}
     </section>
   );
 }

@@ -1,6 +1,6 @@
 # Status against SYSTEM_DESIGN.md
 
-Checked on `main` at `9c06dc3`, 2026-11-07, after both branches and `frontend/Stefan` were merged, then updated for `final_touch/Stefan` at `4463dd2` (New run button, Groq fixes, LLM cache). The backend tests pass (188), and the frontend builds.
+Checked on `main` at `9c06dc3`, 2026-11-07, after both branches and `frontend/Stefan` were merged, then updated on `final_touch/Stefan` (New run button, Groq fixes, page restyle, login, cost vs value). The backend tests pass (191), and the frontend builds.
 
 Key: **[x]** done and working locally, **[~]** partly done, **[ ]** not started.
 
@@ -15,13 +15,13 @@ Key: **[x]** done and working locally, **[~]** partly done, **[ ]** not started.
 | [~] | F5 | One approval screen | Dashboard shows cohorts, offers, reasoning and exposure, and Approve/Reject work. **Guardrail limits are hard-coded defaults** (`DEFAULT_LIMITS` in `useDashboardData.ts`) because the campaign API doesn't return the run's limits. No preview of the personalised pages |
 | [x] | F6 | Real email only to allow-listed recipients | `delivery/send.py`, `email_client.py`. Not yet confirmed from the deployed backend |
 | [x] | F7 | Click tracking via `/r/{token}` | `routers/tracking.py` |
-| [x] | F8 | Personalised page per cohort and variant | `agent/pages.py` generates it, `WinbackPage.tsx` renders it |
-| [~] | F9 | Stripe test checkout, confirmed by webhook | Code works. Locally it needs `stripe listen --events checkout.session.completed --forward-to 127.0.0.1:8000/webhooks/stripe`. No webhook endpoint registered in the Stripe dashboard for the deployed backend yet |
+| [x] | F8 | Personalised page per cohort and variant | `agent/pages.py` generates it, `WinbackPage.tsx` renders it in the reference design, with an unsubscribe footer |
+| [~] | F9 | Stripe test checkout, confirmed by webhook | Works locally: a live conversion was recorded for campaign `77d6299b` at 16:43 UTC. Needs `stripe listen --events checkout.session.completed --forward-to 127.0.0.1:8000/webhooks/stripe`. The resend of `evt_1UZBcnBya3pF0ic3vG6z7qJB` for campaign `dddddddd-…0001` hasn't arrived yet. No webhook endpoint registered for the deployed backend yet |
 | [x] | F10 | Attribute conversions to recipient, variant, cohort, campaign | `webhooks.py`, `metrics.py` |
 | [x] | F11 | Simulated responses from hidden rates | `simulator.py`, called after sending |
 | [x] | F12 | Live and simulated results kept separate | Dashboard `Results` section, polls every 3 s |
 | [x] | F13 | Written recommendation, never executed | `agent/report.py`, "Generate recommendation" button |
-| [ ] | F14 | One login protecting the dashboard | **Backend check is done** (`auth.py`). **Frontend is still the step-0 placeholder:** `LoginPage.tsx` says "Not implemented yet", `RequireLogin` lets everyone in, `getAccessToken()` returns `null`. `VITE_SUPABASE_URL` is empty in `frontend/.env`. Once deployed without `ALLOW_DEV_AUTH`, every dashboard call will fail with 401 |
+| [~] | F14 | One login protecting the dashboard | Login page, session token, redirect to `/login`, and sign-out in the nav are built. `runs.py` now requires login, and a test checks every dashboard API route returns 401 without it. Checked with `ALLOW_DEV_AUTH=false`: logged out you get `/login` and the API returns 401. **Left:** confirm the signed-in flow with `ALLOW_DEV_AUTH=false` on your backend |
 | [x] | F15 | Working unsubscribe link | `/u/{token}`, GET and one-click POST |
 
 ## Gaps outside the F-list
@@ -29,7 +29,7 @@ Key: **[x]** done and working locally, **[~]** partly done, **[ ]** not started.
 | | Item | Detail |
 |---|---|---|
 | [x] | Start a run from the dashboard | New run button and RunBar (`useAgentRun.ts`, `sections.tsx`) start a run, show progress and open the new campaign. Done in `4463dd2` |
-| [ ] | Tokens used and $0 cost on the dashboard | `GET /api/usage` exists, but nothing shows it. It's the evidence for the 10-point cost-vs-value bonus |
+| [x] | Tokens used and $0 cost on the dashboard | "Cost vs value" strip under Results: live revenue recovered, LLM tokens for this campaign's run (`GET /api/usage?run_id=`), and $0 LLM cost. Runs replayed in saved mode log no tokens, and the strip says so |
 | [~] | `LLM_MODE` on Render | `render.yaml` sets `LLM_MODE=saved`. `4463dd2` commits 24 cache files from the first live runs, so saved mode replays those, but any prompt not in the cache (a new run with different data) falls back to default copy. Set `LLM_MODE=live` for the demo |
 | [ ] | Deployment | `render.yaml` and `vercel.json` exist. No sign it has been deployed and tested from the public URLs |
 | [ ] | Keep-awake ping | No pinger set up for `/health` |
@@ -41,14 +41,9 @@ Key: **[x]** done and working locally, **[~]** partly done, **[ ]** not started.
 
 In order. Each step should be finished before the next, except where marked as parallel.
 
-### 1. Frontend login (F14). Blocker for deploying
+### 1. Frontend login (F14): confirm signed in
 
-- `lib/supabase.ts`: create the client from `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-- `lib/auth.ts`: `getAccessToken()` returns `session.access_token`.
-- `LoginPage.tsx`: email and password form, then redirect to `/`, keeping `?campaign=`.
-- `RequireLogin.tsx`: redirect to `/login` when there's no session.
-- Create the one team user in Supabase Auth, and fill `frontend/.env`.
-- **Done when:** with `ALLOW_DEV_AUTH` removed locally, the dashboard loads after logging in and returns 401 without it.
+- Built and checked logged out. Set `ALLOW_DEV_AUTH=false` in `backend/.env`, restart the backend, sign in, and confirm the dashboard loads and New run, Approve and Generate recommendation work.
 
 ### 2. Real guardrail limits (in parallel with step 1)
 
@@ -64,9 +59,11 @@ In order. Each step should be finished before the next, except where marked as p
 - Run the full loop from the public URLs with a team inbox and card `4242 4242 4242 4242`.
 - **Done when:** the conversion appears on the deployed dashboard within about 5 seconds of paying.
 
-### 4. Cost vs value (in parallel with step 3)
+### 4. Cost vs value: done
 
-- Show tokens used per run and for the day from `GET /api/usage`, with "$0 LLM cost (free tier)" next to live revenue recovered.
+### 4b. Agent leftovers
+
+- The `GET /` route in the frozen `main.py`, `backend/tests/_quick_test.py`, and confirming the Groq daily limits in `routers/usage.py` against the account's Free Plan page.
 
 ### 5. Demo readiness
 

@@ -148,3 +148,18 @@ def test_usage_totals_add_up():
 def test_usage_with_no_runs_or_calls():
     usage = summarize_usage([], None, [])
     assert usage["tokens_today"] == 0 and usage["latest_run_tokens"] == 0 and usage["latest_run_id"] is None
+
+
+def test_usage_for_one_run():
+    run = [{"input_tokens": 1000, "output_tokens": 500}, {"input_tokens": None, "output_tokens": 20}]
+    usage = summarize_usage([], None, [], "run-7", run)
+    assert usage["run_id"] == "run-7"
+    assert usage["run_tokens"] == 1520
+    assert usage["run_llm_calls"] == 2
+    assert usage["llm_cost_usd"] == 0
+
+
+def test_usage_without_a_run_has_no_run_fields():
+    usage = summarize_usage([], None, [])
+    assert "run_tokens" not in usage
+    assert usage["llm_cost_usd"] == 0

@@ -57,7 +57,22 @@ export default function DashboardPage() {
         />
         <Guardrails data={data} />
         <Reasons cohorts={data.cohorts} />
-        <Results results={data.results} live={state.resultsLive} />
+        <Results
+          results={data.results}
+          live={state.resultsLive}
+          usage={
+            state.usage
+              ? {
+                  runTokens: state.usage.run_tokens ?? 0,
+                  runCalls: state.usage.run_llm_calls ?? 0,
+                  tokensToday: state.usage.tokens_today,
+                  dailyAllowance: state.usage.daily_allowance,
+                  reserve: state.usage.reserve,
+                  costUsd: state.usage.llm_cost_usd,
+                }
+              : null
+          }
+        />
         <NextStep
           recommendation={data.recommendation}
           connected={state.campaignLive}

@@ -67,6 +67,45 @@
   color: var(--on-wine);
 }
 
+.globalnav__account {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.globalnav__email {
+  overflow: hidden;
+  max-width: 220px;
+  color: var(--on-wine-2);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.globalnav__signout {
+  min-height: 34px;
+  padding: 0 14px;
+  border-color: var(--on-wine-line);
+  color: var(--on-wine);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .globalnav__signout:hover:not(:disabled) {
+    border-color: var(--on-wine);
+    background: var(--on-wine);
+    color: var(--wine-nav);
+  }
+}
+
+@media (max-width: 1068px) {
+  .globalnav__email {
+    display: none;
+  }
+}
+
 .campaignbar {
   border-bottom: 1px solid var(--line);
   background: var(--surface);
@@ -665,6 +704,73 @@
   margin-top: var(--s-2);
   font-size: 16px;
   color: var(--ink-2);
+}
+
+.costvalue {
+  max-width: 920px;
+  margin: var(--s-5) auto 0;
+  padding: var(--s-6) var(--s-7);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  text-align: center;
+}
+
+.costvalue__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amber-600);
+}
+
+.costvalue__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-5);
+  margin: var(--s-5) 0 0;
+}
+
+.costvalue__stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--s-1);
+}
+
+.costvalue__stats dd {
+  margin: 0;
+  color: var(--wine-ink);
+  font-size: clamp(30px, 2.4vw + 12px, 44px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.costvalue__stats dd span {
+  font-size: 0.45em;
+  letter-spacing: -0.01em;
+}
+
+.costvalue__stats dt {
+  font-size: var(--t-label);
+  color: var(--ink-2);
+}
+
+.costvalue__note {
+  max-width: 62ch;
+  margin: var(--s-5) auto 0;
+  font-size: var(--t-label);
+  color: var(--ink-2);
+}
+
+@media (max-width: 734px) {
+  .costvalue {
+    padding: var(--s-5);
+  }
+
+  .costvalue__stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 .rows {

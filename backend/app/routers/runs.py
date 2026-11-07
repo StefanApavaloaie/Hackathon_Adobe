@@ -1,10 +1,11 @@
 from uuid import UUID
-from fastapi import APIRouter, BackgroundTasks, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+from app.auth import require_user
 from app.services.supabase_client import get_supabase
 from app.agent.orchestrator import run_pipeline
 
-router = APIRouter(prefix="/api/runs", tags=["runs"])
+router = APIRouter(prefix="/api/runs", tags=["runs"], dependencies=[Depends(require_user)])
 
 class RunLimits(BaseModel):
     max_percent_off: int = Field(default=40, le=50)

@@ -50,6 +50,18 @@ interface CampaignResponse {
   report: { recommendation?: string } | null;
 }
 
+/** GET /api/usage?run_id=… (backend/app/routers/usage.py). */
+export interface Usage {
+  tokens_today: number;
+  daily_allowance: number;
+  reserve: number;
+  llm_cost_usd: number;
+  run_tokens?: number;
+  run_llm_calls?: number;
+}
+
+const USAGE_POLL_MS = 15000;
+
 export type CampaignStatus = "draft" | "approved" | "sending" | "sent" | "rejected";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -124,6 +136,8 @@ export interface DashboardState {
   campaignLive: boolean;
   /** True when the results come from the API. */
   resultsLive: boolean;
+  /** LLM tokens for this campaign's run, or null until loaded. Never demo data. */
+  usage: Usage | null;
   campaignStatus: CampaignStatus | null;
   loadError: string | null;
   busy: boolean;
@@ -143,6 +157,7 @@ export function useDashboardData(campaignId: string | null): DashboardState {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [usage, setUsage] = useState<Usage | null>(null);
   const active = useRef(true);
 
   const load = useCallback(async () => {
@@ -179,6 +194,24 @@ export function useDashboardData(campaignId: string | null): DashboardState {
       window.clearInterval(timer);
     };
   }, [campaignId, load]);
+
+  // Tokens change only while a run is working, so this polls slowly, and only for a real campaign.
+  const runId = view?.campaign.run_id ?? null;
+  useEffect(() => {
+    setUsage(null);
+    if (!runId) return;
+    let live = true;
+    const fetchUsage = () =>
+      apiGet<Usage>(`/api/usage?run_id=${encodeURIComponent(runId)}`)
+        .then((u) => live && setUsage(u))
+        .catch(() => undefined);
+    void fetchUsage();
+    const timer = window.setInterval(fetchUsage, USAGE_POLL_MS);
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+    };
+  }, [runId]);
 
   const act = useCallback(
     async (path: string, success: string, describe: (error: unknown) => string) => {
@@ -243,6 +276,7 @@ export function useDashboardData(campaignId: string | null): DashboardState {
     data,
     campaignLive: view !== null,
     resultsLive: results !== null,
+    usage,
     campaignStatus: (status as CampaignStatus | null) ?? null,
     loadError,
     busy,
